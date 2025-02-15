@@ -1,11 +1,38 @@
 const pino = require("pino");
+const fs = require("fs");
+const path = require("path");
 
+const logDirectory = "src/logs";
+const logFilePath = path.join(logDirectory, "TapTime.log");
+
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory, { recursive: true });
+}
+
+// 创建 logger 实例，配置多路传输
 const logger = pino({
   transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-    },
+    targets: [
+      // 终端输出：使用 pino-pretty 并开启颜色
+      {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:yyyy-mm-dd HH:MM:ss.l",
+          ignore: "pid,hostname",
+        },
+      },
+      // 文件输出：禁用颜色并指定路径
+      {
+        target: "pino-pretty",
+        options: {
+          colorize: false,
+          destination: logFilePath,
+          translateTime: "SYS:yyyy-mm-dd HH:MM:ss.l",
+          ignore: "pid,hostname",
+        },
+      },
+    ],
   },
 });
 
@@ -18,8 +45,7 @@ const Log = {
    * @param {string} info 日志信息
    */
   info: (logId, moduleName, status, info) => {
-    const date = new Date();
-    logger.info({ logId, moduleName, status, info, date });
+    logger.info({ logId, moduleName, status, info });
   },
 
   /**
@@ -30,22 +56,7 @@ const Log = {
    * @param {string} info 日志信息
    */
   debug: (logId, moduleName, status, info) => {
-    const date = new Date();
-    logger.debug({ logId, moduleName, status, info, date });
-  },
-
-  /**
-   * 记录error
-   * @param {string} logId 日志ID
-   * @param {string} moduleName 函数模块名
-   * @param {string} status 状态
-   * @param {string} info 日志信息
-   * @param {string} code 状态码
-   * @param {string} error 错误信息
-   */
-  error: (logId, moduleName, status, info, code, error) => {
-    const date = new Date();
-    logger.error({ logId, moduleName, status, info, code, error, date });
+    logger.debug({ logId, moduleName, status, info });
   },
 
   /**
@@ -58,8 +69,20 @@ const Log = {
    * @param {string} warning 警告信息
    */
   warn: (logId, moduleName, status, info, code, warning) => {
-    const date = new Date();
-    logger.error({ logId, moduleName, status, info, code, warning, date });
+    logger.warn({ logId, moduleName, status, info, code, warning });
+  },
+
+  /**
+   * 记录error
+   * @param {string} logId 日志ID
+   * @param {string} moduleName 函数模块名
+   * @param {string} status 状态
+   * @param {string} info 日志信息
+   * @param {string} code 状态码
+   * @param {string} error 错误信息
+   */
+  error: (logId, moduleName, status, info, code, error) => {
+    logger.error({ logId, moduleName, status, info, code, error });
   },
 
   // 日志状态常量

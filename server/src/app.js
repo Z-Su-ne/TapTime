@@ -4,7 +4,7 @@ const app = new Koa();
 const Config = require("./infrastructure/config/config");
 const Util = require("./infrastructure/common/util");
 const Logger = require("./infrastructure/common/logger");
-const Banner = require("./interfaces/resources/banner");
+const Banner = require("./infrastructure/common/banner");
 const Route = require("./interfaces/routes/router");
 
 const moduleName = "app.js";
