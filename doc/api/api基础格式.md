@@ -5,10 +5,12 @@
   "msg_type": "请求类型",
   "base_info": {
     "logId": "日志ID",
-    "base": "基础信息"
+    "userId": "用户ID",
+    "userDevice": "用户设备",
+    "other": "其他信息"
   },
   "info": {
-    "base": "基础信息"
+    "other": "其他信息"
   }
 }
 ```

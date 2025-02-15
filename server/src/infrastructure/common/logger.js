@@ -85,6 +85,14 @@ const Log = {
     logger.error({ logId, moduleName, status, info, code, error });
   },
 
+  /**
+   * 展示内容
+   * @param {string} info 需要展示的内容
+   */
+  log: (info) => {
+    console.log(info);
+  },
+
   // 日志状态常量
   status: {
     START: "START.",
