@@ -3,7 +3,15 @@ const config = {
   server_port: 3000,
 
   // 数据库配置
-  db: {},
+  database: {
+    host: "localhost",
+    port: 3306,
+    db: "taptime",
+    username: "root",
+    password: "admin",
+    charset: "utf8mb4",
+    use_unicode: true,
+  },
 };
 
 module.exports = config;
