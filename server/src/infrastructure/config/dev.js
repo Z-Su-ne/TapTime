@@ -6,8 +6,8 @@ const config = {
   database: {
     host: "localhost",
     port: 3306,
-    db: "taptime",
-    username: "root",
+    database_name: "taptime",
+    user: "root",
     password: "admin",
     charset: "utf8mb4",
     use_unicode: true,
