@@ -4,8 +4,9 @@ const moduleName = "config.js";
 
 let config = undefined;
 try {
-  const env = process.env.NODE_ENV || "dev";
+  const env = process.env.MODE_ENV || "dev";
   Logger.info(undefined, moduleName, Logger.status.START, { env });
+  console.log(process.env);
 
   if (env === "dev") {
     config = require("./dev");
@@ -20,7 +21,7 @@ try {
 
   Logger.info(undefined, moduleName, Logger.status.END, { config });
 } catch (error) {
-  Logger.error(undefined, moduleName, Logger.status.ERROR, { env: process.env.NODE_ENV, error });
+  Logger.error(undefined, moduleName, Logger.status.ERROR, { env: process.env.MODE_ENV, error });
 }
 
 module.exports = config;
