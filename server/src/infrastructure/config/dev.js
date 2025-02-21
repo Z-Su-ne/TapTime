@@ -4,13 +4,17 @@ const config = {
 
   // 数据库配置
   database: {
-    host: "localhost",
-    port: 3306,
-    database_name: "taptime",
-    user: "root",
-    password: "admin",
-    charset: "utf8mb4",
-    use_unicode: true,
+    main: {
+      client: "mysql",
+      connection: {
+        host: "localhost",
+        port: 3306,
+        username: "root",
+        password: "admin",
+        charset: "utf8mb4",
+        use_unicode: true,
+      },
+    },
   },
 };
 
