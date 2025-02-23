@@ -11,6 +11,10 @@ if (!fs.existsSync(logDirectory)) {
 
 // 创建 logger 实例，配置多路传输
 const logger = pino({
+  // 序列化 Error
+  serializers: {
+    error: pino.stdSerializers.err,
+  },
   transport: {
     targets: [
       // 终端输出：使用 pino-pretty 并开启颜色
@@ -38,25 +42,24 @@ const logger = pino({
 
 const Log = {
   /**
-   * 记录info
+   * info
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {string} info 日志信息
+   * @param {object} info 自定义描述
    */
   info: (logId, moduleName, status, info) => {
     logger.info({ logId, moduleName, status, info });
   },
 
   /**
-   * 记录debug
+   * debug
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
-   * @param {string} status 状态
-   * @param {string} info 日志信息
+   * @param {object} info 自定义描述
    */
-  debug: (logId, moduleName, status, info) => {
-    logger.debug({ logId, moduleName, status, info });
+  debug: (logId, moduleName, info) => {
+    logger.debug({ logId, moduleName, info });
   },
 
   /**
@@ -64,12 +67,12 @@ const Log = {
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {string} info 日志信息
-   * @param {string} code 状态码
-   * @param {string} warning 警告信息
+   * @param {object} info 自定义描述
+   * @param {boolean} [isExpected=false] 是否预期
+   * @param {string} warning 原始警告信息
    */
-  warn: (logId, moduleName, status, info, code, warning) => {
-    logger.warn({ logId, moduleName, status, info, code, warning });
+  warn: (logId, moduleName, status, info, isExpected, warning) => {
+    logger.warn({ logId, moduleName, status, info, isExpected, warning });
   },
 
   /**
@@ -77,17 +80,17 @@ const Log = {
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {string} info 日志信息
-   * @param {string} code 状态码
-   * @param {string} error 错误信息
+   * @param {object} info 自定义描述
+   * @param {boolean} [isExpected=false] 是否预期
+   * @param {string} error 原生错误信息
    */
-  error: (logId, moduleName, status, info, code, error) => {
-    logger.error({ logId, moduleName, status, info, code, error });
+  error: (logId, moduleName, status, info, isExpected, error) => {
+    logger.error({ logId, moduleName, status, info, isExpected, error });
   },
 
   /**
    * 展示内容
-   * @param {string} info 需要展示的内容
+   * @param {object} info 自定义展示内容
    */
   log: (info) => {
     console.log(info);
@@ -97,9 +100,10 @@ const Log = {
   status: {
     START: "START.",
     END: "END.",
+
+    SUCCESS: "SUCCESS.",
     FAIL: "FAIL.",
     ERROR: "ERROR.",
-    SUCCESS: "SUCCESS.",
   },
 };
 

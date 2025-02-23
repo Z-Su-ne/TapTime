@@ -1,10 +1,11 @@
 const Logger = require("../common/logger");
+const { AppError, ErrorMap } = require("../../interfaces/error");
 
 const moduleName = "config.js";
 
 try {
   const env = process.env.MODE_ENV || "dev";
-  Logger.info(undefined, moduleName, Logger.status.START, { env });
+  Logger.info("SYSTEM", moduleName, Logger.status.START, { env });
 
   let config;
   if (env === "dev") {
@@ -14,12 +15,12 @@ try {
   } else if (env === "test") {
     config = require("./test");
   } else {
-    Logger.warn(undefined, moduleName, Logger.status.FAIL + " Not find env.", { env });
+    Logger.warn("SYSTEM", moduleName, Logger.status.FAIL, { message: "Invalid config, use default config." });
     config = require("./dev");
   }
-  Logger.info(undefined, moduleName, Logger.status.END, { config });
+  Logger.info("SYSTEM", moduleName, Logger.status.END, { config });
 
   module.exports = config;
 } catch (error) {
-  Logger.error(undefined, moduleName, Logger.status.ERROR, { env: process.env.MODE_ENV, error });
+  throw new AppError("SYSTEM", moduleName, ErrorMap.SYSTEM.CONFIG_ERROR, false, error);
 }

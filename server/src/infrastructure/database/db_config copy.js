@@ -4,7 +4,7 @@ const database = {
   table: {
     // 用户表
     user: {
-      uuid: uuid,
+      uuid: varchart(36),
       username: varchart(50),
       password: varchart(255),
       tel: varchart(18),
@@ -19,8 +19,8 @@ const database = {
     },
     // 目标表
     objectives: {
-      uuid: uuid,
-      user_id: uuid,
+      uuid: varchart(36),
+      user_id: varchart(36),
       title: varchart(64),
       description: Text,
       reason: Text,
@@ -44,8 +44,8 @@ const database = {
     },
     // 关键目标表
     key_results: {
-      uuid: uuid,
-      objectives_id: uuid,
+      uuid: varchart(36),
+      objectives_id: varchart(36),
       title: varchart(64),
       sum_focus: Number,
       initial_value: varchart(64),
