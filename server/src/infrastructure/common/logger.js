@@ -1,6 +1,7 @@
 const pino = require("pino");
 const fs = require("fs");
 const path = require("path");
+const { SYSTEM } = require("../../interfaces/error/constant");
 
 const logDirectory = "src/logs";
 const logFilePath = path.join(logDirectory, "TapTime.log");
@@ -68,11 +69,10 @@ const Log = {
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
    * @param {object} info 自定义描述
-   * @param {boolean} [isExpected=false] 是否预期
    * @param {string} warning 原始警告信息
    */
-  warn: (logId, moduleName, status, info, isExpected, warning) => {
-    logger.warn({ logId, moduleName, status, info, isExpected, warning });
+  warn: (logId, moduleName, status, info, warning) => {
+    logger.warn({ logId, moduleName, status, info, warning });
   },
 
   /**
@@ -98,6 +98,8 @@ const Log = {
 
   // 日志状态常量
   status: {
+    SYSTEM: "SYSTEM",
+
     START: "START.",
     END: "END.",
 
