@@ -5,7 +5,7 @@ const bodyParser = require("koa-bodyparser");
 const config = require("./infrastructure/config/config");
 const Logger = require("./infrastructure/common/logger");
 const Banner = require("./infrastructure/common/banner");
-const DB = require("./infrastructure/database/db_initialized");
+const DB = require("./infrastructure/database/db_init");
 const Route = require("./interfaces/routes/router");
 const ErrorHandler = require("./interfaces/error/handler");
 

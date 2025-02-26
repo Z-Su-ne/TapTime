@@ -1,66 +1,234 @@
 const databaseConfig = {
   database_name: "taptime",
-
   table: {
     // 用户表
     users: {
       columns: {
-        uuid: { type: "varchar", length: 36, primary: true },
-        username: { type: "varchar", length: 50, unique: true },
-        password: { type: "varchar", length: 255 },
-        tel: { type: "varchar", length: 18, nullable: true },
-        email: { type: "varchar", length: 64, unique: true },
-        daily_focus: { type: "smallint" },
-        role: { type: "varchar", length: 24, defaultTo: "user" },
-        created_at: { type: "date", notNull: true },
-        updated_at: { type: "date", notNull: true },
+        uuid: {
+          type: "varchar",
+          length: 36,
+          primary: true,
+          comment: "用户唯一标识符",
+        },
+        username: {
+          type: "varchar",
+          length: 50,
+          comment: "用户登录名（需保证唯一性）",
+        },
+        password: {
+          type: "varchar",
+          length: 255,
+          comment: "加密后的密码哈希值（建议使用 bcrypt）",
+        },
+        tel: {
+          type: "varchar",
+          length: 18,
+          nullable: true,
+          comment: "联系电话（允许为空）",
+        },
+        email: {
+          type: "varchar",
+          length: 64,
+          unique: true,
+          comment: "邮箱地址（唯一标识）",
+        },
+        daily_focus: {
+          type: "smallint",
+          unsigned: true,
+          comment: "每日专注时间（单位：分钟）",
+        },
+        role: {
+          type: "varchar",
+          length: 24,
+          defaultTo: "user",
+          comment: "用户角色（user/admin 等）",
+        },
+        created_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "创建时间",
+        },
+        updated_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "最后更新时间",
+        },
       },
-      indexes: [{ columns: ["email"], unique: true }, { columns: ["created_at"] }],
     },
 
     // 目标表
     objectives: {
       columns: {
-        uuid: { type: "varchar", length: 36, primary: true },
-        user_id: { type: "varchar", length: 36 },
-        title: { type: "varchar", length: 64 },
-        description: { type: "text" },
-        reason: { type: "text" },
-        priority: { type: "tinyint" },
-        scheduled: { type: "boolean", defaultTo: false },
-        progress: { type: "decimal", precision: 5, scale: 2 },
-        status: { type: "varchar", length: 24 },
-        start_date: { type: "date" },
-        end_date: { type: "date" },
-        delay_date: { type: "date", nullable: true },
-        rating: { type: "decimal", precision: 3, scale: 1 },
-        review: { type: "text" },
-        sum_focus: { type: "integer" },
-        created_at: { type: "date", notNull: true },
-        updated_at: { type: "date", notNull: true },
+        uuid: {
+          type: "varchar",
+          length: 36,
+          primary: true,
+          comment: "目标唯一标识符",
+        },
+        user_id: {
+          type: "varchar",
+          length: 36,
+          comment: "关联用户的 UUID",
+        },
+        title: {
+          type: "varchar",
+          length: 64,
+          comment: "目标标题",
+        },
+        description: {
+          type: "text",
+          comment: "目标详细描述",
+        },
+        reason: {
+          type: "text",
+          comment: "设定目标的原因",
+        },
+        priority: {
+          type: "tinyint",
+          unsigned: true,
+          comment: "优先级（1-5，数值越大优先级越高）",
+        },
+        scheduled: {
+          type: "boolean",
+          defaultTo: false,
+          comment: "是否已安排计划",
+        },
+        progress: {
+          type: "decimal",
+          precision: 5,
+          scale: 2,
+          comment: "进度百分比（如 50.00 表示 50%）",
+        },
+        status: {
+          type: "varchar",
+          length: 24,
+          comment: "目标状态（如 pending, in_progress, completed）",
+        },
+        start_date: {
+          type: "date",
+          comment: "计划开始日期",
+        },
+        end_date: {
+          type: "date",
+          comment: "计划结束日期",
+        },
+        delay_date: {
+          type: "date",
+          nullable: true,
+          comment: "延期后的截止日期（允许为空）",
+        },
+        rating: {
+          type: "decimal",
+          precision: 3,
+          scale: 1,
+          comment: "评分（范围 0-10）",
+        },
+        review: {
+          type: "text",
+          comment: "目标完成后的总结",
+        },
+        sum_focus: {
+          type: "integer",
+          unsigned: true,
+          comment: "总专注时间（单位：分钟）",
+        },
+        created_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "创建时间",
+        },
+        updated_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "最后更新时间",
+        },
       },
     },
 
-    // 关键目标表
+    // 关键结果表
     key_results: {
       columns: {
-        uuid: { type: "varchar", length: 36, primary: true },
-        objective_id: { type: "varchar", length: 36 },
-        title: { type: "varchar", length: 64 },
-        sum_focus: { type: "integer" },
-        initial_value: { type: "varchar", length: 64 },
-        target_value: { type: "varchar", length: 64 },
-        current_value: { type: "varchar", length: 64 },
-        value_type: { type: "varchar", length: 24 },
-        progress: { type: "decimal", precision: 5, scale: 2 },
-        description: { type: "text" },
-        rating: { type: "decimal", precision: 3, scale: 1 },
-        review: { type: "text" },
-        created_at: { type: "date", notNull: true },
-        updated_at: { type: "date", notNull: true },
+        uuid: {
+          type: "varchar",
+          length: 36,
+          primary: true,
+          comment: "关键结果唯一标识符",
+        },
+        objective_id: {
+          type: "varchar",
+          length: 36,
+          comment: "关联目标的 UUID",
+        },
+        title: {
+          type: "varchar",
+          length: 64,
+          comment: "关键结果标题",
+        },
+        sum_focus: {
+          type: "integer",
+          unsigned: true,
+          comment: "总专注时间（单位：分钟）",
+        },
+        value_type: {
+          type: "varchar",
+          length: 24,
+          comment: "值类型（如 numeric, percentage）",
+        },
+        progress: {
+          type: "decimal",
+          precision: 5,
+          scale: 2,
+          comment: "进度百分比（如 50.00 表示 50%）",
+        },
+        description: {
+          type: "text",
+          comment: "关键结果描述",
+        },
+        rating: {
+          type: "decimal",
+          precision: 3,
+          scale: 1,
+          comment: "评分（范围 0-10）",
+        },
+        review: {
+          type: "text",
+          comment: "关键结果完成后的总结",
+        },
+        created_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "创建时间",
+        },
+        updated_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "最后更新时间",
+        },
       },
     },
   },
+  foreignKeys: [
+    {
+      table: "objectives",
+      columns: "user_id",
+      references: {
+        table: "users",
+        columns: "uuid",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    },
+    {
+      table: "key_results",
+      columns: "objective_id",
+      references: {
+        table: "objectives",
+        columns: "uuid",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    },
+  ],
 };
 
 module.exports = databaseConfig;
