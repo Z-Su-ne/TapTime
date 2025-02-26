@@ -2,33 +2,40 @@ const Logger = require("../../infrastructure/common/logger");
 
 class AppError extends Error {
   /**
-   * @param {string} logId 日志ID
-   * @param {string} moduleName 函数模块名
-   * @param {object} custom 自定义错误
-   * @param {string} info 自定义描述信息
-   * @param {boolean} isExpected 是否预期
-   * @param {string} error 原始错误信息
+   * @param {string} logId - 日志ID
+   * @param {string} moduleName - 函数模块名
+   * @param {object} options - 错误配置项
+   * @param {number} options.code - 错误码
+   * @param {string} options.message - 错误信息
+   * @param {object} details - 详细信息对象
+   * @param {boolean} [isExpected=false] - 是否预期错误
+   * @param {Error} [originalError] - 原始错误对象
    */
-  constructor(logId = undefined, moduleName, custom, info, isExpected = false, error) {
-    super(info.message);
+  constructor(logId, moduleName, { code, message }, details, isExpected = false, originalError) {
+    // 优先使用自定义消息，否则使用原始错误消息
+    super(message || (originalError && originalError.message));
 
-    // 确保原型链正确
+    // 维护原型链
     Object.setPrototypeOf(this, new.target.prototype);
 
     // 错误元数据
     this.name = moduleName || this.constructor.name;
-    this.code = custom.code || undefined;
-    this.message = custom.message || undefined;
-    this.info = info || undefined;
+    this.code = code;
+    this.message = message || "Application Error";
+    this.details = details;
     this.isExpected = isExpected;
-    this.error = error;
+    this.originalError = originalError;
 
-    // 自动记录错误
+    // 构建日志记录对象
+    const logPayload = {
+      code,
+      message,
+      details,
+      // stack: this.stack,
+    };
 
-    if (info) {
-      custom.info = info;
-    }
-    Logger.error(logId, moduleName, Logger.status.ERROR, custom, isExpected, error);
+    // 自动记录错误日志
+    Logger.error(logId, moduleName, Logger.status.ERROR, logPayload, isExpected, originalError);
 
     // 保留原始堆栈跟踪
     if (Error.captureStackTrace) {

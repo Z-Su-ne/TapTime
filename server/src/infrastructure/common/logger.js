@@ -47,20 +47,20 @@ const Log = {
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {object} info 自定义描述
+   * @param {object} details 自定义描述
    */
-  info: (logId, moduleName, status, info) => {
-    logger.info({ logId, moduleName, status, info });
+  info: (logId, moduleName, status, details) => {
+    logger.info({ logId, moduleName, status, details });
   },
 
   /**
    * debug
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
-   * @param {object} info 自定义描述
+   * @param {object} details 自定义描述
    */
-  debug: (logId, moduleName, info) => {
-    logger.debug({ logId, moduleName, info });
+  debug: (logId, moduleName, details) => {
+    logger.debug({ logId, moduleName, details });
   },
 
   /**
@@ -68,11 +68,11 @@ const Log = {
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {object} info 自定义描述
+   * @param {object} details 自定义描述
    * @param {string} warning 原始警告信息
    */
-  warn: (logId, moduleName, status, info, warning) => {
-    logger.warn({ logId, moduleName, status, info, warning });
+  warn: (logId, moduleName, status, details, warning) => {
+    logger.warn({ logId, moduleName, status, details, warning });
   },
 
   /**
@@ -80,12 +80,12 @@ const Log = {
    * @param {string} logId 日志ID
    * @param {string} moduleName 函数模块名
    * @param {string} status 状态
-   * @param {object} info 自定义描述
+   * @param {object} details 自定义描述
    * @param {boolean} [isExpected=false] 是否预期
    * @param {string} error 原生错误信息
    */
-  error: (logId, moduleName, status, info, isExpected, error) => {
-    logger.error({ logId, moduleName, status, info, isExpected, error });
+  error: (logId, moduleName, status, details, isExpected, error) => {
+    logger.error({ logId, moduleName, status, details, isExpected, error });
   },
 
   /**

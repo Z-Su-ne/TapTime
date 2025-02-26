@@ -192,7 +192,7 @@ class DatabaseInitializer {
         columnDef.alter();
       });
 
-      Logger.info(Logger.status.SYSTEM, moduleName, Logger.status.SUCCESS, { message: `Column ${columnName} modified in ${tableName}` });
+      // Logger.info(Logger.status.SYSTEM, moduleName, Logger.status.SUCCESS, { message: `Column ${columnName} modified in ${tableName}` });
     } catch (error) {
       throw new AppError(Logger.status.SYSTEM, moduleName, ErrorMap.SYSTEM.DB_CONN_FAILED, `modifyColumn ${columnName} error`, true, error);
     }
