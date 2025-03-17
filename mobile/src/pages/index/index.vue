@@ -123,13 +123,4 @@ export default {
   padding: 16px;
   line-height: 1.6;
 }
-
-/* 底部导航栏适配 */
-/deep/ .t-tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #fff;
-}
 </style>
