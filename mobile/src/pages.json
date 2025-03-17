@@ -2,9 +2,15 @@
   "pages": [
     {
       "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "TapTime"
-      }
+      "style": { "navigationBarTitleText": "TapTime" }
+    },
+    {
+      "path": "pages/okr/objectivesAdd",
+      "style": { "navigationBarTitleText": "目标添加" }
+    },
+    {
+      "path": "pages/focus/focusAdd",
+      "style": { "navigationBarTitleText": "日志记录" }
     }
   ],
   "globalStyle": {
