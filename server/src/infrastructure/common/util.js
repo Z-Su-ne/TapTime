@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 
+const { AppError, ErrorMap } = require("../../interfaces/error");
 const Logger = require("./logger");
-const AppError = require("../../interfaces/error");
 
 const moduleName = "Util";
 
@@ -14,35 +14,57 @@ const Util = {
     try {
       Logger.info(logId, moduleName, Logger.status.START, { type: typeof param, parm: param });
 
-      // 检查null或undefined
       if (param == null) {
         Logger.info(logId, moduleName, Logger.status.END, { message: "Param is null or undefined." });
         return true;
       }
 
-      // 检查是否为NaN
       if (typeof param === "number" && isNaN(param)) {
         Logger.info(logId, moduleName, Logger.status.END, { message: "Param is NaN." });
         return true;
       }
 
-      // 检查字符串是否为空
       if (typeof param === "string" && param.trim() === "") {
         Logger.info(logId, moduleName, Logger.status.END, { message: "Param is an empty string." });
         return true;
       }
 
-      // 检查数组和对象是否为空
-      if ((Array.isArray(param) || typeof param === "object") && Object.getOwnPropertyNames(param).length === 0) {
-        Logger.info(logId, moduleName, Logger.status.END, { message: "Param is an empty array or object." });
-        return true;
+      if (Array.isArray(param)) {
+        const isEmptyArray = param.length === 0;
+        isEmptyArray && Logger.info(logId, moduleName, Logger.status.END, { message: "Param is an empty array." });
+        return isEmptyArray;
+      }
+
+      if (typeof param === "object") {
+        const isEmptyObject = Object.keys(param).length === 0;
+        isEmptyObject && Logger.info(logId, moduleName, Logger.status.END, { message: "Param is an empty object." });
+        return isEmptyObject;
       }
 
       Logger.info(logId, moduleName, Logger.status.END, { message: "Param not empty." });
       return false;
     } catch (error) {
-      Logger.error(logId, moduleName, Logger.status.ERROR, undefined, undefined, { error });
-      throw new AppError();
+      throw new AppError(logId, moduleName, ErrorMap.COMMON.INVALID_PARAMS, "isEmpty", true, error);
+    }
+  },
+
+  // SQL保留有效entity
+  toSqlEntity: (logId, entity) => {
+    try {
+      Logger.info(logId, moduleName, Logger.status.START, { entity: entity });
+
+      const sqlEntity = {};
+      for (const [key, value] of Object.entries(entity)) {
+        if (!(value == null)) {
+          const column = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+          sqlEntity[column] = value;
+        }
+      }
+
+      Logger.info(logId, moduleName, Logger.status.END, { sqlEntity: sqlEntity });
+      return sqlEntity;
+    } catch (error) {
+      throw new AppError(logId, moduleName, ErrorMap.COMMON.INVALID_PARAMS, "toSqlEntity", true, error);
     }
   },
 };

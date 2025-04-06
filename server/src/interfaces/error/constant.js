@@ -117,6 +117,10 @@ module.exports = {
       code: 5006,
       message: "Unknown error", // 未知错误
     },
+    DB_QUERY_FAILED: {
+      code: 5007,
+      message: "Database query failed", // 数据库查询失败
+    },
   },
 
   // 第三方服务错误

@@ -34,10 +34,11 @@
         </t-collapse-panel>
       </t-collapse>
     </view>
+
     <!-- 底部导航栏 -->
     <view class="box">
       <t-tab-bar v-model="tabBarSelect" :split="false">
-        <t-tab-bar-item v-for="item in tabBar" :key="item.value" :value="item.value">
+        <t-tab-bar-item v-for="item in tabBar" :key="item.value" :value="item.value" @click="toTabBar">
           {{ item.text }}
           <template #icon>
             <t-icon :name="item.icon" />
@@ -58,8 +59,8 @@ export default {
     const noticeBoard = ref({ title: "25", note: "12", icon: () => h(TIcon, { name: "time" }) });
     // 目标库
     const orkShowList = ref([
-      { value: "show1", title: "专注目标", icon: () => h(TIcon, { name: "filter-3" }), note: 1 },
-      { value: "show2", title: "所有目标", icon: () => h(TIcon, { name: "task-checked-1" }), note: 2 },
+      { value: "show1", title: "专注目标", icon: () => h(TIcon, { name: "filter-3" }), note: "1" },
+      { value: "show2", title: "所有目标", icon: () => h(TIcon, { name: "task-checked-1" }), note: "2" },
     ]);
 
     // 专注日志
@@ -81,6 +82,22 @@ export default {
       return () => h(TIcon, { name });
     };
 
+    // 导航栏跳转
+    const toTabBar = () => {
+      if (tabBarSelect.value == "tabBar1") {
+        console.log("跳转 tabBar1（主页）");
+        uni.navigateTo({ url: "/pages/mine/mine" });
+      }
+      if (tabBarSelect.value == "tabBar2") {
+        console.log("跳转 tabBar2（探索）");
+        uni.navigateTo({ url: "/pages/mine/mine" });
+      }
+      if (tabBarSelect.value == "tabBar3") {
+        console.log("跳转 tabBar3（个人）");
+        uni.navigateTo({ url: "/pages/mine/mine" });
+      }
+    };
+
     // 目标库
     const toObjectivesAdd = () => {
       uni.navigateTo({ url: "/pages/okr/objectivesAdd" });
@@ -100,6 +117,7 @@ export default {
       renderIcon,
       handlePanelChange,
 
+      toTabBar,
       toObjectivesAdd,
       toKeyResultsAdd,
     };

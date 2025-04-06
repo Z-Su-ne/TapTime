@@ -1,49 +1,43 @@
 <template>
   <view class="view">
-    <!-- 今日看板 -->
-    <view class="box">
-      <view class="container">
-        <view class="title">今日专注</view>
-      </view>
-
-      <t-cell-group theme="card">
-        <t-cell :left-icon="noticeBoard.icon" :title="'今日专注：' + noticeBoard.title + '分钟'" :note="noticeBoard.note + '次'" />
-      </t-cell-group>
+    <!-- 选项卡 -->
+    <view class="tabBar">
+      <t-tabs default-value="objectives" theme="card" size="large" @click="changeTabBarSelect">
+        <t-tab-panel v-for="item in tabBar" :key="item.value" :value="item.value" :label="item.label" :icon="item.icon" />
+      </t-tabs>
     </view>
-    <!-- 目标库 -->
-    <view class="box">
-      <view class="container">
-        <view class="title">目标库</view>
-        <t-icon class="icon" name="task-add-1" @click="toObjectivesAdd" />
-      </view>
 
-      <t-cell-group theme="card">
-        <t-cell v-for="item in orkShowList" :key="item.value" :left-icon="item.icon" :title="item.title" :note="item.note" arrow />
-      </t-cell-group>
-    </view>
-    <!-- 专注日志 -->
-    <view class="box">
-      <view class="container">
-        <view class="title">专注日志</view>
-        <t-icon class="icon" name="task-add" @click="toKeyResultsAdd" />
+    <!-- 目标info -->
+    <view class="oInfo" v-if="tabBarSelect === 'objectives'">
+      <t-input v-model="objectives.title" align="right" label="目标标题" placeholder="比如：我要完成毕设😶‍🌫️" status="default" />
+      <t-input v-model="objectives.priority" align="right" label="目标优先级" placeholder="选填(1~5,数字越大优先级越高)" type="number" />
+      <view>
+        <t-calendar v-model:visible="showDate" :value="objectives.date" type="range" @confirm="confirmDate"></t-calendar>
+        <t-cell title="计划周期" arrow :note="dateNote" @click="showDate = true"></t-cell>
       </view>
-
-      <t-collapse theme="card" v-model="activeValues" @change="handlePanelChange">
-        <t-collapse-panel v-for="i in 4" :key="i" :value="i" :header="`面板${i}`" :disabled="i === 4">
-          <view class="content">动态内容区域</view>
-        </t-collapse-panel>
-      </t-collapse>
+      <t-divider content="更多描述内容" />
+      <t-textarea v-model="objectives.reason" label="目标缘由" placeholder="我要毕业🤯" autosize indicator :maxlength="500" />
+      <t-textarea v-model="objectives.description" label="目标描述" placeholder="没啥好说的，就打个unll，然后接着写代码吧" autosize indicator :maxlength="500" />
+      <t-fab :icon="getIcon('task-add-1')" draggable="vertical" text="保存目标" @click="saveAll" />
     </view>
-    <!-- 底部导航栏 -->
-    <view class="box">
-      <t-tab-bar v-model="tabBarSelect" :split="false">
-        <t-tab-bar-item v-for="item in tabBar" :key="item.value" :value="item.value">
-          {{ item.text }}
-          <template #icon>
-            <t-icon :name="item.icon" />
+
+    <!-- 关键结果info -->
+    <view class="kInfo" v-else>
+      <view v-for="(item, index) in keyResults" :key="index">
+        <t-tag class="kTag" theme="primary" closable variant="light" @close="delKInfo(index)">关键结果 {{ index + 1 }} </t-tag>
+        <t-input v-model="item.title" align="right" label="关键结果" placeholder="比如：阅读10篇文献😶‍🌫️" status="default" />
+        <t-input v-model="item.value_type" align="right" label="量化类型" :placeholder="kValueTypeValue[item.value_type]" :key="item.value_type" disabled>
+          <template #suffix>
+            <t-button theme="primary" size="extra-small" @click="kValueTypeChange(index)"> 切换类型 </t-button>
           </template>
-        </t-tab-bar-item>
-      </t-tab-bar>
+        </t-input>
+        <t-input v-model="item.value_current" align="right" label="当前状态" :placeholder="item.value_type == 'numeric' ? '选填，具体数字' : '选填，具体数字，但是不用百分号'" type="number" />
+        <t-input v-model="item.value_target" align="right" label="目标状态" :placeholder="item.value_type == 'numeric' ? '选填，具体数字' : '选填，具体数字，但是不用百分号'" type="number" />
+        <t-textarea v-model="item.description" label="描述" placeholder="没啥好说的，就打个unll，然后接着写代码吧" autosize indicator :maxlength="500" />
+        <t-divider />
+      </view>
+
+      <t-fab :icon="getIcon('flag')" draggable="vertical" text="增加关键结果" @click="addKInfo" />
     </view>
   </view>
 </template>
@@ -54,91 +48,142 @@ import { Icon as TIcon } from "tdesign-icons-vue-next";
 
 export default {
   setup() {
-    // 今日看板
-    const noticeBoard = ref({ title: "25", note: "12", icon: () => h(TIcon, { name: "time" }) });
-    // 目标库
-    const orkShowList = ref([
-      { value: "show1", title: "专注目标", icon: () => h(TIcon, { name: "filter-3" }), note: 1 },
-      { value: "show2", title: "所有目标", icon: () => h(TIcon, { name: "task-checked-1" }), note: 2 },
-    ]);
-
-    // 专注日志
-    const activeValues = ref([1]);
-    const handlePanelChange = (val) => {
-      activeValues.value = val;
-    };
-
-    // 底部导航栏
-    const tabBarSelect = ref("tabBar1");
+    // 选项卡
+    let tabBarSelect = ref("objectives");
     const tabBar = ref([
-      { value: "tabBar1", text: "主页", icon: "home" },
-      { value: "tabBar2", text: "探索", icon: "system-sum" },
-      { value: "tabBar3", text: "个人", icon: "user" },
+      { value: "objectives", label: " 目标", icon: () => h(TIcon, { name: "task-checked-1" }) },
+      { value: "keyResults", label: " 关键结果", icon: () => h(TIcon, { name: "flag" }) },
     ]);
-
-    // 图标渲染方法
-    const renderIcon = (name) => {
-      return () => h(TIcon, { name });
+    const changeTabBarSelect = (select) => {
+      tabBarSelect.value = select;
+      console.log("选择了", tabBarSelect.value);
     };
 
-    // 目标库
-    const toObjectivesAdd = () => {
-      uni.navigateTo({ url: "/pages/okr/objectivesAdd" });
+    // uuidv4
+    function generateUUID() {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    }
+
+    // 目标info
+    const objectives = ref({
+      uuid: generateUUID(),
+      title: null,
+      priority: null,
+      date: [],
+      reason: null,
+      description: null,
+    });
+    const priority = ref("");
+    const showDate = ref(false);
+    const dateNote = ref("");
+    const confirmDate = (val) => {
+      objectives.value.date = val;
+      showDate.value = false;
+      // 格式化每个日期并连接
+      const formattedDates = val.map((dateStr) => formatDate(dateStr));
+      dateNote.value = formattedDates.join(" - ");
+      console.log("选择了", objectives.value.date);
+    };
+    const saveAll = () => {
+      console.log(objectives.value, keyResults.value);
     };
 
-    // 专注日志
-    const toKeyResultsAdd = () => {
-      uni.navigateTo({ url: "/pages/focus/focusAdd" });
+    // 关键结果Info
+    const keyResults = ref([
+      {
+        objective_id: objectives.value.uuid,
+        uuid: generateUUID(),
+        title: null,
+        value_type: "numeric",
+        value_current: null,
+        value_original: null,
+        value_target: null,
+        description: null,
+      },
+    ]);
+    const kValueTypeValue = ref({
+      numeric: "数值量化",
+      percentage: "百分比量化",
+    });
+    const kValueTypeChange = (index) => {
+      const newValueType = keyResults.value[index].value_type === "numeric" ? "percentage" : "numeric";
+      keyResults.value[index].value_type = newValueType;
+      console.log(keyResults.value[index].value_type);
     };
+    const delKInfo = (index) => {
+      keyResults.value.splice(index, 1);
+    };
+    const addKInfo = () => {
+      keyResults.value.push({
+        objective_id: objectives.value.uuid,
+        uuid: generateUUID(),
+        title: null,
+        value_type: "numeric",
+        value_current: null,
+        value_target: null,
+        description: null,
+      });
+    };
+
+    // 格式化日期函数（需接收单个日期字符串）
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}.${month}.${day}`;
+    }
+
+    // 图标注册
+    const getIcon = (icon) => () => h(TIcon, { name: icon });
 
     return {
-      noticeBoard,
-      orkShowList,
-      activeValues,
-      tabBarSelect,
       tabBar,
-      renderIcon,
-      handlePanelChange,
+      tabBarSelect,
+      changeTabBarSelect,
 
-      toObjectivesAdd,
-      toKeyResultsAdd,
+      objectives,
+      priority,
+      showDate,
+      dateNote,
+      confirmDate,
+      saveAll,
+
+      keyResults,
+      kValueTypeValue,
+      kValueTypeChange,
+      delKInfo,
+      addKInfo,
+
+      getIcon,
     };
   },
 };
 </script>
 
 <style>
-.box {
-  padding: 8px 0;
-  display: block;
+.oInfo,
+.kInfo {
+  background: white;
 }
-.noticeBoard {
-  margin: 0 16px;
-  background-color: white;
-  border-radius: 12px;
+
+.kTag {
+  margin-top: 4px;
+  margin-left: 8px;
 }
-.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-}
-.title {
-  font-size: large;
-  font-weight: bold;
-}
-.icon {
-  margin-right: 24px;
-  size: 24px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.icon:active {
-  opacity: 0.7;
-}
-/* 内容区域 */
-.content {
-  padding: 16px;
-  line-height: 1.6;
+
+.example-progress {
+  .button-group {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 8px;
+    .space {
+      width: 16px;
+    }
+  }
 }
 </style>

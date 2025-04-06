@@ -49,8 +49,12 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-4050620250312001",
     "@dcloudio/uni-mp-xhs": "3.0.0-4050620250312001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4050620250312001",
+    "axios": "^1.8.4",
+    "pinia": "^3.0.1",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "tdesign-mobile-vue": "^1.8.2",
-    "vue": "3.4.21",
+    "uuid": "^11.1.0",
+    "vue": "^3.5.13",
     "vue-i18n": "9.14.3"
   },
   "devDependencies": {

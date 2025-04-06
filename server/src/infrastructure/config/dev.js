@@ -6,7 +6,7 @@ const config = {
   database: {
     // 主数据库
     main: {
-      client: "mysql2",
+      client: "mysql",
       connection: {
         host: "localhost",
         port: 3306,

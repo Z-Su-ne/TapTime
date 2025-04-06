@@ -13,23 +13,25 @@ const databaseConfig = {
         username: {
           type: "varchar",
           length: 50,
-          comment: "用户登录名（需保证唯一性）",
+          unique: true,
+          notNull: true,
+          comment: "用户登录名",
         },
         password: {
           type: "varchar",
           length: 255,
-          comment: "加密后的密码哈希值（建议使用 bcrypt）",
+          comment: "密码",
         },
         tel: {
           type: "varchar",
           length: 18,
-          nullable: true,
           comment: "联系电话（允许为空）",
         },
         email: {
           type: "varchar",
           length: 64,
           unique: true,
+          notNull: true,
           comment: "邮箱地址（唯一标识）",
         },
         daily_focus: {
@@ -174,6 +176,18 @@ const databaseConfig = {
           length: 24,
           comment: "值类型（如 numeric, percentage）",
         },
+        value_current: {
+          type: "integer",
+          comment: "当前值",
+        },
+        value_original: {
+          type: "integer",
+          comment: "原始值",
+        },
+        value_target: {
+          type: "integer",
+          comment: "目标值",
+        },
         progress: {
           type: "decimal",
           precision: 5,
@@ -193,6 +207,54 @@ const databaseConfig = {
         review: {
           type: "text",
           comment: "关键结果完成后的总结",
+        },
+        created_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "创建时间",
+        },
+        updated_at: {
+          type: "datetime",
+          notNull: true,
+          comment: "最后更新时间",
+        },
+      },
+    },
+
+    // 专注日志记录
+    focus_log: {
+      columns: {
+        uuid: {
+          type: "varchar",
+          length: 36,
+          primary: true,
+          comment: "专注日志标识符",
+        },
+        objective_id: {
+          type: "varchar",
+          length: 36,
+          comment: "关联目标的 UUID",
+        },
+        key_results_id: {
+          type: "varchar",
+          length: 64,
+          comment: "关联关键结果的 UUID",
+        },
+        times: {
+          type: "integer",
+          comment: "专注时间（单位：分钟）",
+        },
+        time_start: {
+          type: "datetime",
+          comment: "专注开始时间",
+        },
+        time_end: {
+          type: "datetime",
+          comment: "专注结束时间",
+        },
+        description: {
+          type: "text",
+          comment: "关键结果描述",
         },
         created_at: {
           type: "datetime",
