@@ -121,6 +121,10 @@ module.exports = {
       code: 5007,
       message: "Database query failed", // 数据库查询失败
     },
+    DB_FAILED: {
+      code: 5007,
+      message: "Database failed", // 数据库错误
+    },
   },
 
   // 第三方服务错误

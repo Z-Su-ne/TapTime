@@ -6,6 +6,7 @@ class KeyresultsEntity {
     this.objectiveId = data.objectiveId;
     this.title = data.title;
     this.sumFocus = data.sumFocus;
+    this.targetFocus = data.targetFocus;
     this.valueType = data.valueType;
     this.valueCurrent = data.valueCurrent;
     this.valueOriginal = data.valueOriginal;
@@ -14,6 +15,7 @@ class KeyresultsEntity {
     this.description = data.description;
     this.rating = data.rating;
     this.review = data.review;
+    this.isDel = data.isDel;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

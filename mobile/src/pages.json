@@ -9,8 +9,16 @@
       "style": { "navigationBarTitleText": "个人" }
     },
     {
-      "path": "pages/okr/objectivesAdd",
+      "path": "pages/okr/okrAdd",
       "style": { "navigationBarTitleText": "目标添加" }
+    },
+    {
+      "path": "pages/okr/okrList",
+      "style": { "navigationBarTitleText": "目标库" }
+    },
+    {
+      "path": "pages/okr/okrInfo",
+      "style": { "navigationBarTitleText": "目标查看" }
     },
     {
       "path": "pages/focus/focusAdd",

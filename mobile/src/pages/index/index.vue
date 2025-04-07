@@ -14,11 +14,11 @@
     <view class="box">
       <view class="container">
         <view class="title">目标库</view>
-        <t-icon class="icon" name="task-add-1" @click="toObjectivesAdd" />
+        <t-icon class="icon" name="task-add-1" @click="toOkrAdd" />
       </view>
 
       <t-cell-group theme="card">
-        <t-cell v-for="item in orkShowList" :key="item.value" :left-icon="item.icon" :title="item.title" :note="item.note" arrow />
+        <t-cell v-for="item in orkShowList" :key="item.value" :left-icon="item.icon" :title="item.title" :note="item.note" @click="item.onClick" arrow />
       </t-cell-group>
     </view>
     <!-- 专注日志 -->
@@ -52,15 +52,22 @@
 <script>
 import { h, ref } from "vue";
 import { Icon as TIcon } from "tdesign-icons-vue-next";
+import Utils from "../../common/utils";
+import { useOkrStore } from "../../stores/useOkrStore";
+import { useUserStore } from "../../stores/useUserStore";
 
 export default {
   setup() {
+    const utils = new Utils();
+    const okr = useOkrStore();
+    const user = useUserStore();
+
     // 今日看板
     const noticeBoard = ref({ title: "25", note: "12", icon: () => h(TIcon, { name: "time" }) });
     // 目标库
     const orkShowList = ref([
-      { value: "show1", title: "专注目标", icon: () => h(TIcon, { name: "filter-3" }), note: "1" },
-      { value: "show2", title: "所有目标", icon: () => h(TIcon, { name: "task-checked-1" }), note: "2" },
+      { value: "show1", title: "专注目标", onClick: () => toOkrInfo(), icon: () => h(TIcon, { name: "filter-3" }), note: "1" },
+      { value: "show2", title: "所有目标", onClick: () => toOkrList(), icon: () => h(TIcon, { name: "task-checked-1" }), note: "2" },
     ]);
 
     // 专注日志
@@ -99,8 +106,18 @@ export default {
     };
 
     // 目标库
-    const toObjectivesAdd = () => {
-      uni.navigateTo({ url: "/pages/okr/objectivesAdd" });
+    const toOkrAdd = () => {
+      uni.navigateTo({ url: "/pages/okr/okrAdd" });
+    };
+    const toOkrList = () => {
+      uni.navigateTo({ url: "/pages/okr/okrList" });
+    };
+    const toOkrInfo = async () => {
+      if (utils.isEmpty(user.okrFocus)) {
+        uni.navigateTo({ url: "/pages/okr/okrList" });
+      } else {
+        uni.navigateTo({ url: "/pages/okr/okrInfo?uuid=" + user.okrFocus });
+      }
     };
 
     // 专注日志
@@ -109,6 +126,10 @@ export default {
     };
 
     return {
+      user,
+      okr,
+      utils,
+
       noticeBoard,
       orkShowList,
       activeValues,
@@ -118,7 +139,10 @@ export default {
       handlePanelChange,
 
       toTabBar,
-      toObjectivesAdd,
+
+      toOkrAdd,
+      toOkrList,
+
       toKeyResultsAdd,
     };
   },

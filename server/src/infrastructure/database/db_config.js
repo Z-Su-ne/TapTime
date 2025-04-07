@@ -34,6 +34,11 @@ const databaseConfig = {
           notNull: true,
           comment: "邮箱地址（唯一标识）",
         },
+        okr_focus: {
+          type: "varchar",
+          length: 36,
+          comment: "专注目标唯一标识符",
+        },
         daily_focus: {
           type: "smallint",
           unsigned: true,
@@ -44,6 +49,11 @@ const databaseConfig = {
           length: 24,
           defaultTo: "user",
           comment: "用户角色（user/admin 等）",
+        },
+        is_del: {
+          type: "boolean",
+          defaultTo: false,
+          comment: "是否删除",
         },
         created_at: {
           type: "datetime",
@@ -107,15 +117,15 @@ const databaseConfig = {
           comment: "目标状态（如 pending, in_progress, completed）",
         },
         start_date: {
-          type: "date",
+          type: "datetime",
           comment: "计划开始日期",
         },
         end_date: {
-          type: "date",
+          type: "datetime",
           comment: "计划结束日期",
         },
         delay_date: {
-          type: "date",
+          type: "datetime",
           nullable: true,
           comment: "延期后的截止日期（允许为空）",
         },
@@ -133,6 +143,16 @@ const databaseConfig = {
           type: "integer",
           unsigned: true,
           comment: "总专注时间（单位：分钟）",
+        },
+        target_focus: {
+          type: "integer",
+          unsigned: true,
+          comment: "计划专注时间（单位：分钟）",
+        },
+        is_del: {
+          type: "boolean",
+          defaultTo: false,
+          comment: "是否删除",
         },
         created_at: {
           type: "datetime",
@@ -171,6 +191,11 @@ const databaseConfig = {
           unsigned: true,
           comment: "总专注时间（单位：分钟）",
         },
+        target_focus: {
+          type: "integer",
+          unsigned: true,
+          comment: "计划专注时间（单位：分钟）",
+        },
         value_type: {
           type: "varchar",
           length: 24,
@@ -207,6 +232,11 @@ const databaseConfig = {
         review: {
           type: "text",
           comment: "关键结果完成后的总结",
+        },
+        is_del: {
+          type: "boolean",
+          defaultTo: false,
+          comment: "是否删除",
         },
         created_at: {
           type: "datetime",
@@ -256,6 +286,11 @@ const databaseConfig = {
           type: "text",
           comment: "关键结果描述",
         },
+        is_del: {
+          type: "boolean",
+          defaultTo: false,
+          comment: "是否删除",
+        },
         created_at: {
           type: "datetime",
           notNull: true,
@@ -270,26 +305,26 @@ const databaseConfig = {
     },
   },
   foreignKeys: [
-    {
-      table: "objectives",
-      columns: "user_id",
-      references: {
-        table: "users",
-        columns: "uuid",
-      },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-    },
-    {
-      table: "key_results",
-      columns: "objective_id",
-      references: {
-        table: "objectives",
-        columns: "uuid",
-      },
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
-    },
+    // {
+    //   table: "objectives",
+    //   columns: "user_id",
+    //   references: {
+    //     table: "users",
+    //     columns: "uuid",
+    //   },
+    //   onDelete: "CASCADE",
+    //   onUpdate: "CASCADE",
+    // },
+    // {
+    //   table: "key_results",
+    //   columns: "objective_id",
+    //   references: {
+    //     table: "objectives",
+    //     columns: "uuid",
+    //   },
+    //   onDelete: "CASCADE",
+    //   onUpdate: "CASCADE",
+    // },
   ],
 };
 

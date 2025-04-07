@@ -9,6 +9,7 @@ class FocuslogEntity {
     this.timeStart = data.timeStart;
     this.timeEnd = data.timeEnd;
     this.description = data.description;
+    this.isDel = data.isDel;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

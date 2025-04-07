@@ -1,20 +1,19 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-export const useUserStore = defineStore("user", {
+export const useOkrStore = defineStore("okr", {
   state: () => ({
     uuid: undefined,
-    username: undefined,
+    okrname: undefined,
     tel: undefined,
     email: undefined,
     password: undefined,
-    okrFocus: undefined,
   }),
 
   actions: {
     // post
-    async userPost(logId, data) {
+    async okrPost(logId, data) {
       try {
-        const apiURL = "http://localhost:3000/mobile/user";
+        const apiURL = "http://localhost:3000/mobile/okr";
         const postData = { logId: logId, data: data };
         const response = await axios.post(apiURL, postData, {
           headers: {

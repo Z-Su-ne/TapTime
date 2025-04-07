@@ -17,6 +17,8 @@ class ObjectivesEntity {
     this.rating = data.rating;
     this.review = data.review;
     this.sumFocus = data.sumFocus;
+    this.targetFocus = data.targetFocus;
+    this.isDel = data.isDel;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }

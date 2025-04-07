@@ -115,7 +115,6 @@ export default {
         if (utils.isEmpty(postUser.value.username) || utils.isEmpty(postUser.value.email) || utils.isEmpty(postUser.value.password)) {
           Toast({ message: "不能为空", theme: "error" });
         } else {
-          postUser.value.type = "user";
           postUser.value.event = "register";
           const logId = utils.generateUUID();
           const registeRes = await user.userPost(logId, postUser.value);
@@ -125,6 +124,7 @@ export default {
               username: registeRes.return[0].username,
               password: registeRes.return[0].password,
               email: registeRes.return[0].email,
+              okrFocus: registeRes.return[0].okrFocus,
             });
             Toast({ message: "注册成功", theme: "success" });
           } else {
@@ -133,6 +133,7 @@ export default {
           }
         }
       } catch (error) {
+        console.log(error);
         Toast({ message: "未知错误:" + error, theme: "error" });
         user.$reset();
       }
@@ -147,7 +148,6 @@ export default {
         if (utils.isEmpty(postUser.value.email) || utils.isEmpty(postUser.value.password)) {
           Toast({ message: "不能为空", theme: "error" });
         } else {
-          postUser.value.type = "user";
           postUser.value.event = "login";
           const logId = utils.generateUUID();
           const loginRes = await user.userPost(logId, postUser.value);
@@ -157,6 +157,7 @@ export default {
               username: loginRes.return[0].username,
               password: loginRes.return[0].password,
               email: loginRes.return[0].email,
+              okrFocus: loginRes.return[0].okrFocus,
             });
             Toast({ message: "登录成功", theme: "success" });
           } else {
@@ -165,6 +166,7 @@ export default {
           }
         }
       } catch (error) {
+        console.log(error);
         Toast({ message: "未知错误:" + error, theme: "error" });
         user.$reset();
       }
@@ -176,7 +178,6 @@ export default {
     const showUpdateView = ref(false);
     const handleUpdate = async () => {
       try {
-        postUser.value.type = "user";
         postUser.value.event = "update";
         postUser.value.uuid = user.uuid;
         const logId = utils.generateUUID();
@@ -186,6 +187,7 @@ export default {
             username: updateRes.return[0].username,
             password: updateRes.return[0].password,
             email: updateRes.return[0].email,
+            okrFocus: updateRes.return[0].okrFocus,
           });
           Toast({ message: "更新成功", theme: "success" });
         } else {
@@ -193,6 +195,7 @@ export default {
           user.$reset();
         }
       } catch (error) {
+        console.log(error);
         Toast({ message: "未知错误:" + error, theme: "error" });
         user.$reset();
       }

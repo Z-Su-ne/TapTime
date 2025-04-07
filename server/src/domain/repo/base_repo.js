@@ -31,12 +31,12 @@ class BaseRepo {
       const insertData = await this.knex(this.tableName)
         .insert(sqlEntity)
         .then(() => this.knex(this.tableName).where({ [columnName]: sqlEntity[columnName] }));
-      const result = insertData ? insertData : null;
+      const result = insertData ? Util.toEntity(logId, insertData) : null;
 
       Logger.info(logId, moduleName, Logger.status.END, { result });
       return result;
     } catch (error) {
-      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_QUERY_FAILED, { method: "create" }, true, error);
+      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_FAILED, { method: "create" }, true, error);
     }
   }
 
@@ -44,9 +44,13 @@ class BaseRepo {
     try {
       Logger.info(logId, moduleName, Logger.status.START, { type: "select", entity: entity });
 
+      entity.isDel = 0;
       const sqlEntity = Util.toSqlEntity(logId, entity);
       if (Object.keys(sqlEntity).length > 0) {
-        const selectRes = await this.knex(this.tableName).where(sqlEntity);
+        const rawResult = await this.knex(this.tableName).where(sqlEntity);
+        // 下划线转驼峰
+        const selectRes = Util.toEntity(logId, rawResult);
+
         Logger.info(logId, moduleName, Logger.status.END, { selectRes });
         return selectRes.map((data) => new this.EntityClass(data));
       } else {
@@ -54,7 +58,7 @@ class BaseRepo {
         return null;
       }
     } catch (error) {
-      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_QUERY_FAILED, { method: "select" }, true, error);
+      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_FAILED, { method: "select" }, true, error);
     }
   }
 
@@ -62,6 +66,7 @@ class BaseRepo {
     try {
       Logger.info(logId, moduleName, Logger.status.START, { type: "update", key: key, value: value, entity: entity });
 
+      entity.createdAt = null;
       entity.updatedAt = new Date();
       const sqlEntity = Util.toSqlEntity(logId, entity);
       const updateRes = await this.knex(this.tableName).where(key, value).update(sqlEntity);
@@ -69,7 +74,7 @@ class BaseRepo {
       Logger.info(logId, moduleName, Logger.status.END, { updateRes });
       return updateRes;
     } catch (error) {
-      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_QUERY_FAILED, { method: "update" }, true, error);
+      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_FAILED, { method: "update" }, true, error);
     }
   }
 
@@ -82,7 +87,7 @@ class BaseRepo {
       Logger.info(logId, moduleName, Logger.status.END, { deleteRes });
       return deleteRes;
     } catch (error) {
-      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_QUERY_FAILED, { method: "delete" }, true, error);
+      throw new AppError(logId, moduleName, ErrorMap.SYSTEM.DB_FAILED, { method: "delete" }, true, error);
     }
   }
 }

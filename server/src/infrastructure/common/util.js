@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const humps = require("humps");
 
 const { AppError, ErrorMap } = require("../../interfaces/error");
 const Logger = require("./logger");
@@ -48,7 +49,7 @@ const Util = {
     }
   },
 
-  // SQL保留有效entity
+  // entity => sql
   toSqlEntity: (logId, entity) => {
     try {
       Logger.info(logId, moduleName, Logger.status.START, { entity: entity });
@@ -65,6 +66,27 @@ const Util = {
       return sqlEntity;
     } catch (error) {
       throw new AppError(logId, moduleName, ErrorMap.COMMON.INVALID_PARAMS, "toSqlEntity", true, error);
+    }
+  },
+
+  // sql => entity
+  toEntity: (logId, sqlRaw) => {
+    try {
+      Logger.info(logId, moduleName, Logger.status.START, { sqlRaw: sqlRaw });
+      const res = humps.camelizeKeys(sqlRaw);
+      Logger.info(logId, moduleName, Logger.status.END, { entity: res });
+      return res;
+    } catch (error) {
+      throw new AppError(logId, moduleName, ErrorMap.COMMON.INVALID_PARAMS, "toEntity", true, error);
+    }
+  },
+
+  // ISO 8601 => mysql <datetime>
+  toMySqlDatetime: (date) => {
+    try {
+      return new Date(date).toISOString().replace("T", " ").slice(0, 19);
+    } catch (error) {
+      throw new AppError(logId, moduleName, ErrorMap.COMMON.INVALID_PARAMS, "toMySqlDatetime", true, error);
     }
   },
 };

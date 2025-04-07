@@ -1,9 +1,9 @@
-const { AppError, ErrorMap } = require("../../interfaces/error");
-const Logger = require("../../infrastructure/common/logger");
-const Util = require("../../infrastructure/common/util");
+const { AppError, ErrorMap } = require("../../../interfaces/error");
+const Logger = require("../../../infrastructure/common/logger");
+const Util = require("../../../infrastructure/common/util");
 
-const UsersEntity = require("../../domain/entity/users_entity");
-const UsersRepo = require("../../domain/repo/users_repo");
+const UsersEntity = require("../../../domain/entity/users_entity");
+const UsersRepo = require("../../../domain/repo/users_repo");
 
 const moduleName = "user_login.js";
 

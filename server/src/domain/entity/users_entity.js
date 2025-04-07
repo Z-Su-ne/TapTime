@@ -7,8 +7,10 @@ class UsersEntity {
     this.password = data.password;
     this.tel = data.tel;
     this.email = data.email;
+    this.okrFocus = data.okrFocus;
     this.dailyFocus = data.dailyFocus;
     this.role = data.role;
+    this.isDel = data.isDel;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
