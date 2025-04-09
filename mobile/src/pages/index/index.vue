@@ -7,9 +7,10 @@
       </view>
 
       <t-cell-group theme="card">
-        <t-cell :left-icon="noticeBoard.icon" :title="'今日专注：' + noticeBoard.title + '分钟'" :note="noticeBoard.note + '次'" />
+        <t-cell :left-icon="getIcon('time')" :title="'今日专注：' + dashboard.sum + '分钟'" :note="dashboard.count + '次'" />
       </t-cell-group>
     </view>
+
     <!-- 目标库 -->
     <view class="box">
       <view class="container">
@@ -18,19 +19,36 @@
       </view>
 
       <t-cell-group theme="card">
-        <t-cell v-for="item in orkShowList" :key="item.value" :left-icon="item.icon" :title="item.title" :note="item.note" @click="item.onClick" arrow />
+        <t-cell :left-icon="getIcon('filter-3')" title="专注目标" :note="kr.okrFocusName" @click="toOkrInfo" arrow />
+        <t-cell :left-icon="getIcon('task-checked-1')" title="所有目标" :note="kr.countOkrInProgress" @click="toOkrList" arrow />
       </t-cell-group>
     </view>
+
     <!-- 专注日志 -->
     <view class="box">
       <view class="container">
         <view class="title">专注日志</view>
-        <t-icon class="icon" name="task-add" @click="toKeyResultsAdd" />
+        <t-icon class="icon" name="task-add" @click="toFocusAdd" />
       </view>
 
-      <t-collapse theme="card" v-model="activeValues" @change="handlePanelChange">
-        <t-collapse-panel v-for="i in 4" :key="i" :value="i" :header="`面板${i}`" :disabled="i === 4">
-          <view class="content">动态内容区域</view>
+      <t-cell-group theme="card" style="margin: 0 0 8px 0">
+        <t-cell :left-icon="getIcon('browse-gallery')" title="专注日期" :note="focusDate || '点击选择'" @click="showFocusDate = true" />
+      </t-cell-group>
+      <t-popup v-model="showFocusDate" placement="bottom">
+        <t-date-time-picker :value="focusDate" :mode="['date']" title="选择专注日期" start="2000-1-1" format="YYYY-MM-DD" @confirm="confirmFocusDate" @cancel="cancelFocusDate" />
+      </t-popup>
+
+      <t-collapse theme="card" v-model="activeValues" @change="activeChange">
+        <t-collapse-panel v-for="(item, index) in focusList" :key="item.uuid" :value="index" :header="'No:' + (index + 1) + '&emsp;' + formattedHeader(item)" @click="() => selectFocusInfo(item)">
+          <view class="content">
+            <t-button size="small" theme="light" block style="width: 400%">
+              {{ focusInfoMap[item.uuid] || "看看自己做了什么" }}
+            </t-button>
+            <view style="width: 32px"></view>
+            <t-button size="small" theme="danger" variant="outline" block @click="delFocus(item.uuid)">
+              {{ "点击删除" }}
+            </t-button>
+          </view>
         </t-collapse-panel>
       </t-collapse>
     </view>
@@ -50,60 +68,25 @@
 </template>
 
 <script>
-import { h, ref } from "vue";
+import { h, ref, reactive, computed, watch, onMounted, onActivated } from "vue";
+import { Toast } from "tdesign-mobile-vue";
 import { Icon as TIcon } from "tdesign-icons-vue-next";
 import Utils from "../../common/utils";
 import { useOkrStore } from "../../stores/useOkrStore";
 import { useUserStore } from "../../stores/useUserStore";
+import { useFocusStore } from "../../stores/useFocusStore";
+import { useIndexStore } from "../../stores/useIndexStore";
 
 export default {
   setup() {
     const utils = new Utils();
     const okr = useOkrStore();
     const user = useUserStore();
+    const focus = useFocusStore();
+    const index = useIndexStore();
 
     // 今日看板
-    const noticeBoard = ref({ title: "25", note: "12", icon: () => h(TIcon, { name: "time" }) });
-    // 目标库
-    const orkShowList = ref([
-      { value: "show1", title: "专注目标", onClick: () => toOkrInfo(), icon: () => h(TIcon, { name: "filter-3" }), note: "1" },
-      { value: "show2", title: "所有目标", onClick: () => toOkrList(), icon: () => h(TIcon, { name: "task-checked-1" }), note: "2" },
-    ]);
-
-    // 专注日志
-    const activeValues = ref([1]);
-    const handlePanelChange = (val) => {
-      activeValues.value = val;
-    };
-
-    // 底部导航栏
-    const tabBarSelect = ref("tabBar1");
-    const tabBar = ref([
-      { value: "tabBar1", text: "主页", icon: "home" },
-      { value: "tabBar2", text: "探索", icon: "system-sum" },
-      { value: "tabBar3", text: "个人", icon: "user" },
-    ]);
-
-    // 图标渲染方法
-    const renderIcon = (name) => {
-      return () => h(TIcon, { name });
-    };
-
-    // 导航栏跳转
-    const toTabBar = () => {
-      if (tabBarSelect.value == "tabBar1") {
-        console.log("跳转 tabBar1（主页）");
-        uni.navigateTo({ url: "/pages/mine/mine" });
-      }
-      if (tabBarSelect.value == "tabBar2") {
-        console.log("跳转 tabBar2（探索）");
-        uni.navigateTo({ url: "/pages/mine/mine" });
-      }
-      if (tabBarSelect.value == "tabBar3") {
-        console.log("跳转 tabBar3（个人）");
-        uni.navigateTo({ url: "/pages/mine/mine" });
-      }
-    };
+    const dashboard = ref({});
 
     // 目标库
     const toOkrAdd = () => {
@@ -112,38 +95,189 @@ export default {
     const toOkrList = () => {
       uni.navigateTo({ url: "/pages/okr/okrList" });
     };
-    const toOkrInfo = async () => {
+    const toOkrInfo = () => {
       if (utils.isEmpty(user.okrFocus)) {
         uni.navigateTo({ url: "/pages/okr/okrList" });
       } else {
         uni.navigateTo({ url: "/pages/okr/okrInfo?uuid=" + user.okrFocus });
       }
     };
+    const kr = ref({});
 
     // 专注日志
-    const toKeyResultsAdd = () => {
+    const toFocusAdd = () => {
       uni.navigateTo({ url: "/pages/focus/focusAdd" });
     };
 
+    const showFocusDate = ref(false);
+    const focusDate = ref(
+      (() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      })()
+    );
+    const cancelFocusDate = () => {
+      console.log("cancelFocusDate");
+      showFocusDate.value = false;
+    };
+    const confirmFocusDate = (value) => {
+      console.log("confirmFocusDate: ", value);
+      focusDate.value = value;
+      showFocusDate.value = false;
+      getIndexInfo();
+    };
+
+    const focusList = ref([]);
+    const formattedHeader = computed(() => (item) => {
+      return `${item.timeStart}-${item.timeEnd} 共${item.times}分钟`;
+    });
+    const activeValues = ref([]);
+    const activeChange = (val) => {
+      activeValues.value = val;
+    };
+    const focusInfoMap = ref({});
+    const selectFocusInfo = async (item) => {
+      try {
+        const postData = {
+          event: "selectFocus",
+          objectiveId: focusList.value[activeValues.value]?.objectiveId,
+          keyResultsId: focusList.value[activeValues.value]?.keyResultsId,
+        };
+
+        const logId = utils.generateUUID();
+        const indexRes = await index.indexPost(logId, postData);
+
+        if (indexRes.success) {
+          const msg = `${indexRes.return.o[0].title}-${indexRes.return.kr[0].title}`;
+          focusInfoMap.value[item.uuid] = msg;
+        } else {
+          Toast({ message: indexRes.return, theme: "error" });
+        }
+      } catch (error) {
+        Toast({ message: "请求失败", theme: "error" });
+      }
+    };
+    const delFocus = async (item) => {
+      try {
+        const postData = {
+          event: "delFocus",
+          uuid: item,
+        };
+
+        const logId = utils.generateUUID();
+        const delRes = await focus.focusPost(logId, postData);
+
+        if (delRes.success) {
+          Toast({ message: "删除成功", theme: "success" });
+        } else {
+          Toast({ message: delRes.return, theme: "error" });
+        }
+      } catch (error) {
+        Toast({ message: "请求失败", theme: "error" });
+      }
+      getIndexInfo();
+    };
+
+    // 信息获取
+    const getIndexInfo = async () => {
+      try {
+        if (utils.isEmpty(user.uuid)) {
+          Toast({ message: "请先登录", theme: "error" });
+        } else {
+          const postData = ref({
+            event: "index",
+            uuid: user.uuid,
+            okrFocus: user.okrFocus,
+            selectDate: focusDate.value,
+          });
+          const logId = utils.generateUUID();
+          const indexRes = await index.indexPost(logId, postData.value);
+          if (indexRes.success) {
+            dashboard.value = indexRes.return.dashboard;
+            kr.value = indexRes.return.kr;
+            focusList.value = indexRes.return.focusList;
+            console.log(indexRes.return);
+          } else {
+            Toast({ message: indexRes.return, theme: "error" });
+          }
+        }
+      } catch (error) {
+        oast({ message: "未知错误:" + error, theme: "error" });
+      }
+    };
+
+    // 首次挂载时执行
+    onMounted(() => {
+      getIndexInfo();
+    });
+
+    // 被 <keep-alive> 缓存，使用 onActivated 钩子在每次激活时执行
+    onActivated(() => {
+      getIndexInfo();
+    });
+
+    // 底部导航栏
+    const tabBarSelect = ref("tabBar1");
+    const tabBar = ref([
+      { value: "tabBar1", text: "主页", icon: "home" },
+      { value: "tabBar2", text: "探索", icon: "system-sum" },
+      { value: "tabBar3", text: "个人", icon: "user" },
+    ]);
+    // 导航栏跳转
+    const toTabBar = () => {
+      if (tabBarSelect.value == "tabBar1") {
+        console.log("跳转 tabBar1（主页）");
+        uni.navigateTo({ url: "/pages/index/index" });
+      }
+      if (tabBarSelect.value == "tabBar2") {
+        console.log("跳转 tabBar2（探索）");
+        uni.navigateTo({ url: "/pages/tool/tool" });
+      }
+      if (tabBarSelect.value == "tabBar3") {
+        console.log("跳转 tabBar3（个人）");
+        uni.navigateTo({ url: "/pages/mine/mine" });
+      }
+    };
+
+    // 图标注册
+    const getIcon = (icon) => () => h(TIcon, { name: icon });
+
     return {
-      user,
-      okr,
       utils,
+      okr,
+      user,
+      focus,
+      index,
+      getIcon,
+      getIndexInfo,
 
-      noticeBoard,
-      orkShowList,
-      activeValues,
-      tabBarSelect,
-      tabBar,
-      renderIcon,
-      handlePanelChange,
+      dashboard,
 
-      toTabBar,
-
+      kr,
       toOkrAdd,
       toOkrList,
+      toOkrInfo,
 
-      toKeyResultsAdd,
+      toFocusAdd,
+      showFocusDate,
+      focusDate,
+      cancelFocusDate,
+      confirmFocusDate,
+
+      focusList,
+      formattedHeader,
+      focusInfoMap,
+      selectFocusInfo,
+      activeValues,
+      activeChange,
+      delFocus,
+
+      tabBar,
+      tabBarSelect,
+      toTabBar,
     };
   },
 };
@@ -154,7 +288,7 @@ export default {
   padding: 8px 0;
   display: block;
 }
-.noticeBoard {
+.dashboard {
   margin: 0 16px;
   background-color: white;
   border-radius: 12px;
@@ -178,9 +312,9 @@ export default {
 .icon:active {
   opacity: 0.7;
 }
-/* 内容区域 */
 .content {
-  padding: 16px;
-  line-height: 1.6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

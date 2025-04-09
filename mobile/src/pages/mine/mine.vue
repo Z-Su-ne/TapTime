@@ -216,11 +216,6 @@ export default {
       { value: "tabBar3", text: "个人", icon: "user" },
     ]);
 
-    // 图标渲染方法
-    const renderIcon = (name) => {
-      return () => h(TIcon, { name });
-    };
-
     // 导航栏跳转
     const toTabBar = () => {
       if (tabBarSelect.value == "tabBar1") {
@@ -229,7 +224,7 @@ export default {
       }
       if (tabBarSelect.value == "tabBar2") {
         console.log("跳转 tabBar2（探索）");
-        uni.navigateTo({ url: "/pages/mine/mine" });
+        uni.navigateTo({ url: "/pages/tool/tool" });
       }
       if (tabBarSelect.value == "tabBar3") {
         console.log("跳转 tabBar3（个人）");
@@ -261,7 +256,6 @@ export default {
       tabBar,
       tabBarSelect,
       toTabBar,
-      renderIcon,
     };
   },
 };

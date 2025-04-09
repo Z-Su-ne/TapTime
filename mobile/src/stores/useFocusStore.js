@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-export const useOkrStore = defineStore("okr", {
+export const useFocusStore = defineStore("focus", {
   state: () => ({}),
 
   actions: {
     // post
-    async okrPost(logId, data) {
+    async focusPost(logId, data) {
       try {
-        const apiURL = "http://localhost:3000/mobile/okr";
+        const apiURL = "http://localhost:3000/mobile/focus";
         const postData = { logId: logId, data: data };
         const response = await axios.post(apiURL, postData, {
           headers: {

@@ -22,7 +22,15 @@
     },
     {
       "path": "pages/focus/focusAdd",
-      "style": { "navigationBarTitleText": "日志记录" }
+      "style": { "navigationBarTitleText": "专注记录" }
+    },
+    {
+      "path": "pages/tool/tool",
+      "style": { "navigationBarTitleText": "探索" }
+    },
+    {
+      "path": "pages/tool/tomatoOne",
+      "style": { "navigationBarTitleText": "番茄钟" }
     }
   ],
   "globalStyle": {

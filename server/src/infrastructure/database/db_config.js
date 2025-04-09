@@ -275,11 +275,13 @@ const databaseConfig = {
           comment: "专注时间（单位：分钟）",
         },
         time_start: {
-          type: "datetime",
+          type: "varchar",
+          length: 12,
           comment: "专注开始时间",
         },
         time_end: {
-          type: "datetime",
+          type: "varchar",
+          length: 12,
           comment: "专注结束时间",
         },
         description: {
