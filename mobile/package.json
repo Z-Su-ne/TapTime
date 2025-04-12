@@ -50,6 +50,7 @@
     "@dcloudio/uni-mp-xhs": "3.0.0-4050620250312001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4050620250312001",
     "axios": "^1.8.4",
+    "echarts": "^5.6.0",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",
     "tdesign-mobile-vue": "^1.8.2",
@@ -63,7 +64,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-4050620250312001",
     "@dcloudio/uni-stacktracey": "3.0.0-4050620250312001",
     "@dcloudio/vite-plugin-uni": "3.0.0-4050620250312001",
-    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "@vitejs/plugin-vue-jsx": "^4.1.2",
     "@vue/runtime-core": "3.5.13",
     "vite": "5.2.8"
   }
