@@ -40,8 +40,8 @@ SensorQMI8658 qmi;
 SensorPCF85063 rtc;
 
 // 数据缓冲区
-#define SAMPLE_INTERVAL 100    // 100ms采样间隔
-#define BUFFER_SIZE 10         // 缓冲区存储10组数据（1秒数据量）
+#define SAMPLE_INTERVAL 100    // 采样间隔(ms)
+#define BUFFER_SIZE 50         // 缓冲区存储组数（每次post请求数据量）
 struct IMUData {
   float ax, ay, az;
   float gx, gy, gz;
@@ -57,7 +57,7 @@ bool bufferFull = false;
 char msgBuffer[32] = "No message";
 
 // 计时标志
-char timekeeperBuffer[32] = "stop";
+char timekeeperBuffer[32] = "STOP";
 
 void setup() {
   Serial.begin(115200);
@@ -75,12 +75,12 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED && retry++ < 20) {
     delay(500);
     gfx->print(".");
-    Serial.print("."); // 调试输出
+    Serial.print("."); 
   }
   if (WiFi.status() != WL_CONNECTED) {
     gfx->fillScreen(RED);
     gfx->print("WiFi Failed!");
-    Serial.println("WiFi Connection Failed"); // 调试信息
+    Serial.println("WiFi Connection Failed"); 
     while (1);
   }
 
@@ -91,7 +91,7 @@ void setup() {
   if (!rtc.begin(Wire, PCF85063_SLAVE_ADDRESS, IIC_SDA, IIC_SCL)) {
     gfx->fillScreen(RED);
     gfx->print("RTC Init Failed!");
-    Serial.println("RTC Initialization Failed"); // 调试信息
+    Serial.println("RTC Initialization Failed");
     while (1);
   }
 
@@ -99,7 +99,7 @@ void setup() {
   if (!qmi.begin(Wire, QMI8658_L_SLAVE_ADDRESS, IIC_SDA, IIC_SCL)) {
     gfx->fillScreen(RED);
     gfx->print("Sensor Init Failed!");
-    Serial.println("QMI8658 Initialization Failed"); // 调试信息
+    Serial.println("QMI8658 Initialization Failed");
     while (1);
   }
   qmi.configAccelerometer(SensorQMI8658::ACC_RANGE_4G, SensorQMI8658::ACC_ODR_1000Hz);
@@ -127,7 +127,7 @@ void setup() {
 
   // 绘制时钟界面
   drawClockFace();
-  drawMessage("Ready");
+  drawMessage("All love Lain");
 }
 
 void loop() {
@@ -158,7 +158,7 @@ void loop() {
 
   // 数据发送逻辑（带超时控制）
   static unsigned long lastPostTime = 0;
-  if (bufferFull && (currentMillis - lastPostTime >= 1000)) {
+  if (bufferFull && (currentMillis - lastPostTime >= 5000)) {
     sendPostRequest();
     bufferFull = false;
     lastPostTime = currentMillis;
@@ -257,14 +257,14 @@ void sendPostRequest() {
   http.begin(serverUrl);
   http.addHeader("Content-Type", "application/json");
 
-  // 使用ArduinoJson构建符合接口的JSON
+  // 使用ArduinoJson构建JSON
   StaticJsonDocument<1024> doc;
-  doc["logId"] = "TapTimeEsp32"; // 保持与示例一致的logId格式
+  doc["logId"] = "TapTimeEsp32";
   JsonObject data = doc.createNestedObject("data");
-  data["userId"] = "ae55238a-aed7-4f28-911f-071056761a06"; // 添加userId字段
+  data["userId"] = "ae55238a-aed7-4f28-911f-071056761a06"; 
   data["timekeeper"] = timekeeperBuffer;
 
-  // 添加传感器数据数组（根据实际接口调整字段名）
+  // 添加传感器数据数组
   JsonArray samples = data.createNestedArray("samples");
   for (int i = 0; i < BUFFER_SIZE; i++) {
     JsonObject sample = samples.createNestedObject();
@@ -284,7 +284,7 @@ void sendPostRequest() {
   int httpResponseCode = http.POST(jsonBody);
   if (httpResponseCode > 0) {
     String response = http.getString();
-    Serial.println("HTTP Response: " + String(httpResponseCode) + " - " + response); // 详细响应[[8]]
+    Serial.println("HTTP Response: " + String(httpResponseCode) + " - " + response);
     
     StaticJsonDocument<256> respDoc;
     DeserializationError error = deserializeJson(respDoc, response);
@@ -302,7 +302,7 @@ void sendPostRequest() {
       syncTimeFromServer(dateStr);
     }
   } else {
-    Serial.println("HTTP Error: " + String(httpResponseCode)); // 错误处理[[7]]
+    Serial.println("HTTP Error: " + String(httpResponseCode)); 
   }
   http.end();
 }
