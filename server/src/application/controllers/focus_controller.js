@@ -3,6 +3,7 @@ const Logger = require("../../infrastructure/common/logger");
 
 const FocusAddUseCase = require("../usecase/focus_case/focus_add");
 const FocusDelUseCase = require("../usecase/focus_case/focus_del");
+const FocusInfoUseCase = require("../usecase/focus_case/focus_info");
 
 const moduleName = "focus_controller.js";
 
@@ -19,6 +20,14 @@ class FocusController {
           const addRes = await FocusAddUseCase.do(logId, data);
           ctx.status = 200;
           ctx.body = addRes;
+          break;
+
+        // 查询目标
+        case "focusInfo":
+          Logger.info(logId, moduleName, Logger.status.START, data);
+          const selectRes = await FocusInfoUseCase.do(logId, data);
+          ctx.status = 200;
+          ctx.body = selectRes;
           break;
 
         // 删除目标

@@ -15,14 +15,14 @@
 
       <t-cell-group theme="card">
         <!-- 专注开始时间 -->
-        <t-cell title="专注开始" :note="postFocus.timeStart || '选择专注开始时间'" @click="showTimeStart = true" />
+        <t-cell title="专注开始" :note="postFocus.timeStart || timeStart" @click="showTimeStart = true" />
         <t-popup v-model="showTimeStart" placement="bottom">
-          <t-date-time-picker default-value="12:30" :mode="[null, 'minute']" title="选择专注开始" format="HH:mm" @confirm="confirmTimeStart" @cancel="cancelTime('start')" />
+          <t-date-time-picker :default-value="timeStart" :mode="[null, 'minute']" title="选择专注开始" format="HH:mm" @confirm="confirmTimeStart" @cancel="cancelTime('start')" />
         </t-popup>
         <!-- 专注结束时间 -->
-        <t-cell title="专注结束" :note="postFocus.timeEnd || '选择专注结束时间'" @click="showTimeEnd = true" />
+        <t-cell title="专注结束" :note="postFocus.timeEnd || timeEnd" @click="showTimeEnd = true" />
         <t-popup v-model="showTimeEnd" placement="bottom">
-          <t-date-time-picker default-value="12:30" :mode="[null, 'minute']" title="选择专注结束" format="HH:mm" @confirm="confirmTimeEnd" @cancel="cancelTime('start')" />
+          <t-date-time-picker :default-value="timeEnd" :mode="[null, 'minute']" title="选择专注结束" format="HH:mm" @confirm="confirmTimeEnd" @cancel="cancelTime('start')" />
         </t-popup>
         <!-- 专注时间 -->
         <t-cell title="专注时长" :note="(postFocus.times || '0') + ' 分钟'" />
@@ -36,10 +36,16 @@
     <div style="margin: 16px">
       <t-button size="large" theme="primary" block @click="focusAdd">添加专注</t-button>
     </div>
+
+    <div style="margin: 16px">
+      <t-button size="large" theme="danger" variant="outline" block @click="delFocus">删除</t-button>
+    </div>
   </view>
 </template>
 
 <script>
+import { onLoad } from "@dcloudio/uni-app";
+import { useRouter } from "vue-router";
 import { h, ref, reactive, computed, watch, onMounted, onActivated } from "vue";
 import { Toast } from "tdesign-mobile-vue";
 import { Icon as TIcon } from "tdesign-icons-vue-next";
@@ -50,45 +56,40 @@ import { useFocusStore } from "../../stores/useFocusStore";
 
 export default {
   setup() {
+    const focusId = ref("");
     const utils = new Utils();
     const okr = useOkrStore();
     const user = useUserStore();
     const focus = useFocusStore();
+
+    const timeStart = ref("");
+    const timeEnd = ref("");
 
     const objectives = ref("");
     const keyResults = ref([]);
     const postFocus = ref({});
 
     // 获取专注目标信息
-    const getOkrInfo = async () => {
+    const getOkrInfo = async (uuid, objectiveId) => {
       try {
-        if (utils.isEmpty(user.okrFocus)) {
+        if (utils.isEmpty(objectiveId)) {
           Toast({ message: "请先在所有目标选定专注目标", theme: "error" });
           uni.navigateTo({ url: "/pages/index/index" });
         } else {
           const postOkrData = ref({
             event: "okrInfo",
-            objectivesId: user.okrFocus,
+            objectivesId: objectiveId,
           });
           const logId = utils.generateUUID();
           const infoRes = await okr.okrPost(logId, postOkrData.value);
           if (infoRes.success) {
             objectives.value = infoRes.return.objectives;
             keyResults.value = infoRes.return.keyResults;
+            await getFocus(uuid);
           } else {
             Toast({ message: infoRes.return, theme: "error" });
           }
         }
-      } catch (error) {
-        console.log(error);
-        Toast({ message: "未知错误:" + error, theme: "error" });
-      }
-    };
-
-    // 跳转okrInfo
-    const toOkrInfo = async () => {
-      try {
-        uni.navigateTo({ url: "/pages/okr/okrInfo?uuid=" + objectives.value.uuid });
       } catch (error) {
         console.log(error);
         Toast({ message: "未知错误:" + error, theme: "error" });
@@ -123,6 +124,68 @@ export default {
       },
       { immediate: true }
     );
+
+    const getFocus = async (uuid) => {
+      try {
+        const postFocusData = ref({
+          event: "focusInfo",
+          uuid: uuid,
+        });
+        const logId = utils.generateUUID();
+        const infoRes = await focus.focusPost(logId, postFocusData.value);
+        if (infoRes.success) {
+          focusId.value = uuid;
+          postFocus.value.event = "focusUpdate";
+          postFocus.value.objectiveId = infoRes.return[0].objectiveId;
+          postFocus.value.keyResultsId = infoRes.return[0].keyResultsId;
+          postFocus.value.timeStart = infoRes.return[0].timeStart;
+          postFocus.value.timeEnd = infoRes.return[0].timeEnd;
+
+          timeStart.value = infoRes.return[0].timeStart;
+          timeEnd.value = infoRes.return[0].timeEnd;
+
+          // krState.uuid = infoRes.return[0].keyResultsId;
+          // // krState.title = context.label;
+
+          console.log(timeStart.value, timeEnd.value);
+        } else {
+          Toast({ message: infoRes.return, theme: "error" });
+        }
+      } catch (error) {
+        console.log(error);
+        Toast({ message: "未知错误:" + error, theme: "error" });
+      }
+    };
+
+    const delFocus = async () => {
+      try {
+        const postData = {
+          event: "delFocus",
+          uuid: focusId.value,
+        };
+
+        const logId = utils.generateUUID();
+        const delRes = await focus.focusPost(logId, postData);
+
+        if (delRes.success) {
+          Toast({ message: "删除成功", theme: "success" });
+        } else {
+          Toast({ message: delRes.return, theme: "error" });
+        }
+      } catch (error) {
+        Toast({ message: "请求失败", theme: "error" });
+      }
+    };
+
+    // 跳转okrInfo
+    const toOkrInfo = async () => {
+      try {
+        uni.navigateTo({ url: "/pages/okr/okrInfo?uuid=" + objectives.value.uuid });
+      } catch (error) {
+        console.log(error);
+        Toast({ message: "未知错误:" + error, theme: "error" });
+      }
+    };
 
     // 点选时间
     const showTimeStart = ref(false);
@@ -195,14 +258,12 @@ export default {
       return Math.abs(end - start);
     });
 
-    // 首次挂载时执行
-    onMounted(() => {
-      getOkrInfo();
-    });
-
-    // 被 <keep-alive> 缓存，使用 onActivated 钩子在每次激活时执行
-    onActivated(() => {
-      getOkrInfo();
+    // 界面加载
+    onLoad((options) => {
+      const uuid = options.uuid;
+      const objectiveId = options.objectiveId;
+      console.log("接收的 UUID:", uuid, "接收的 objectiveId:", objectiveId);
+      getOkrInfo(uuid, objectiveId);
     });
 
     return {
@@ -228,8 +289,13 @@ export default {
       confirmTimeStart,
       confirmTimeEnd,
       cancelTime,
+      getFocus,
 
       focusAdd,
+      timeStart,
+      timeEnd,
+      delFocus,
+      focusId,
     };
   },
 };

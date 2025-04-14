@@ -41,12 +41,12 @@
       <t-collapse theme="card" v-model="activeValues" @change="activeChange">
         <t-collapse-panel v-for="(item, index) in focusList" :key="item.uuid" :value="index" :header="'No:' + (index + 1) + '&emsp;' + formattedHeader(item)" @click="() => selectFocusInfo(item)">
           <view class="content">
-            <t-button size="small" theme="light" block style="width: 400%">
+            <t-button size="small" theme="light" block style="width: 900%">
               {{ focusInfoMap[item.uuid] || "看看自己做了什么" }}
             </t-button>
             <view style="width: 32px"></view>
-            <t-button size="small" theme="danger" variant="outline" block @click="delFocus(item.uuid)">
-              {{ "点击删除" }}
+            <t-button size="small" variant="outline" block @click="toFocus(item.uuid, item.objectiveId)">
+              {{ "详情" }}
             </t-button>
           </view>
         </t-collapse-panel>
@@ -151,14 +151,24 @@ export default {
         const indexRes = await index.indexPost(logId, postData);
 
         if (indexRes.success) {
-          const msg = `${indexRes.return.o[0].title}-${indexRes.return.kr[0].title}`;
-          focusInfoMap.value[item.uuid] = msg;
+          if (utils.isEmpty(focusList.value[activeValues.value]?.keyResultsId)) {
+            const msg = `${indexRes.return.o[0].title}-自动导入`;
+            focusInfoMap.value[item.uuid] = msg;
+          } else {
+            const msg = `${indexRes.return.o[0].title}-${indexRes.return.kr[0].title}`;
+            focusInfoMap.value[item.uuid] = msg;
+          }
         } else {
           Toast({ message: indexRes.return, theme: "error" });
         }
       } catch (error) {
         Toast({ message: "请求失败", theme: "error" });
       }
+    };
+    const toFocus = async (uuid, objectiveId) => {
+      uni.navigateTo({
+        url: `/pages/focus/focusInfo?uuid=${encodeURIComponent(uuid)}&objectiveId=${encodeURIComponent(objectiveId)}`,
+      });
     };
     const delFocus = async (item) => {
       try {
@@ -274,6 +284,7 @@ export default {
       activeValues,
       activeChange,
       delFocus,
+      toFocus,
 
       tabBar,
       tabBarSelect,

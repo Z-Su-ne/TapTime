@@ -38,19 +38,30 @@ bool timeSynced = false;
 // 传感器实例
 SensorQMI8658 qmi;
 SensorPCF85063 rtc;
-IMUdata acc = { 0 };
-IMUdata gyr = { 0 };
+
+// 数据缓冲区
+#define SAMPLE_INTERVAL 100    // 采样间隔(ms)
+#define BUFFER_SIZE 50         // 缓冲区存储组数（每次post请求数据量）
+struct IMUData {
+  float ax, ay, az;
+  float gx, gy, gz;
+};
+IMUData imuBuffer[BUFFER_SIZE];
+volatile int bufferIndex = 0;
+unsigned long lastSampleTime = 0;
+bool bufferFull = false;
 
 // 消息显示
 #define MSG_Y_POS 250
 #define MSG_HEIGHT 30
 char msgBuffer[32] = "No message";
 
+// 计时标志
+char timekeeperBuffer[32] = "STOP";
+
 void setup() {
   Serial.begin(115200);
   USBSerial.begin(115200);
-
-  // 初始化显示屏
   gfx->begin();
   gfx->fillScreen(BLACK);
   gfx->setTextColor(WHITE);
@@ -64,29 +75,32 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED && retry++ < 20) {
     delay(500);
     gfx->print(".");
+    Serial.print("."); 
   }
   if (WiFi.status() != WL_CONNECTED) {
     gfx->fillScreen(RED);
     gfx->print("WiFi Failed!");
-    while (1)
-      ;
+    Serial.println("WiFi Connection Failed"); 
+    while (1);
   }
 
-  // 初始化RTC
+  // 初始化I2C总线
   Wire.begin(IIC_SDA, IIC_SCL);
+  
+  // 初始化RTC
   if (!rtc.begin(Wire, PCF85063_SLAVE_ADDRESS, IIC_SDA, IIC_SCL)) {
     gfx->fillScreen(RED);
     gfx->print("RTC Init Failed!");
-    while (1)
-      ;
+    Serial.println("RTC Initialization Failed");
+    while (1);
   }
 
-  // 初始化传感器
+  // 初始化QMI8658传感器
   if (!qmi.begin(Wire, QMI8658_L_SLAVE_ADDRESS, IIC_SDA, IIC_SCL)) {
     gfx->fillScreen(RED);
     gfx->print("Sensor Init Failed!");
-    while (1)
-      ;
+    Serial.println("QMI8658 Initialization Failed");
+    while (1);
   }
   qmi.configAccelerometer(SensorQMI8658::ACC_RANGE_4G, SensorQMI8658::ACC_ODR_1000Hz);
   qmi.configGyroscope(SensorQMI8658::GYR_RANGE_64DPS, SensorQMI8658::GYR_ODR_896_8Hz);
@@ -113,27 +127,44 @@ void setup() {
 
   // 绘制时钟界面
   drawClockFace();
-  drawMessage(msgBuffer);
+  drawMessage("All love Lain");
 }
 
 void loop() {
-  // 读取传感器数据
-  if (qmi.getDataReady()) {
-    qmi.getAccelerometer(acc.x, acc.y, acc.z);
-    qmi.getGyroscope(gyr.x, gyr.y, gyr.z);
+  unsigned long currentMillis = millis();
+
+  // 数据采集逻辑（无中断禁用）
+  if (currentMillis - lastSampleTime >= SAMPLE_INTERVAL) {
+    if (qmi.getDataReady()) {
+      qmi.getAccelerometer(
+        imuBuffer[bufferIndex].ax,
+        imuBuffer[bufferIndex].ay,
+        imuBuffer[bufferIndex].az
+      );
+      qmi.getGyroscope(
+        imuBuffer[bufferIndex].gx,
+        imuBuffer[bufferIndex].gy,
+        imuBuffer[bufferIndex].gz
+      );
+      bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
+      bufferFull = (bufferIndex == 0); // 缓冲区填满标志
+    }
+    lastSampleTime = currentMillis;
   }
 
-  // 处理时间显示
+  // 时间显示更新
   updateTime();
   updateClockDisplay();
 
-  // 处理POST请求（每秒一次）
+  // 数据发送逻辑（带超时控制）
   static unsigned long lastPostTime = 0;
-  if (millis() - lastPostTime >= 1000) {
+  if (bufferFull && (currentMillis - lastPostTime >= 5000)) {
     sendPostRequest();
-    lastPostTime = millis();
+    bufferFull = false;
+    lastPostTime = currentMillis;
   }
 }
+
 
 void drawClockFace() {
   gfx->fillScreen(BLACK);
@@ -222,59 +253,57 @@ void drawMessage(const String &msg) {
 }
 
 void sendPostRequest() {
-  if (!qmi.getDataReady()) return;
-
   HTTPClient http;
   http.begin(serverUrl);
   http.addHeader("Content-Type", "application/json");
 
-  // 构造 JSON 请求体
-  String jsonBody = "{\"logId\":\"TapTimeEsp32\","
-                    "\"data\":{"
-                      "\"userId\":\"TapTimeEsp32\","
-                      "\"accel\":{\"x\":" + String(acc.x) + ",\"y\":" + String(acc.y) + ",\"z\":" + String(acc.z) + "},"
-                      "\"gyro\":{\"x\":" + String(gyr.x) + ",\"y\":" + String(gyr.y) + ",\"z\":" + String(gyr.z) + "}"
-                    "}}";
+  // 使用ArduinoJson构建JSON
+  StaticJsonDocument<1024> doc;
+  doc["logId"] = "TapTimeEsp32";
+  JsonObject data = doc.createNestedObject("data");
+  data["userId"] = "ae55238a-aed7-4f28-911f-071056761a06"; 
+  data["timekeeper"] = timekeeperBuffer;
 
-  // 打印请求内容到串口监视器
-  Serial.println("Sending POST request to: " + String(serverUrl));
-  Serial.println("Request body: " + jsonBody);
+  // 添加传感器数据数组
+  JsonArray samples = data.createNestedArray("samples");
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    JsonObject sample = samples.createNestedObject();
+    sample["accel"]["x"] = imuBuffer[i].ax;
+    sample["accel"]["y"] = imuBuffer[i].ay;
+    sample["accel"]["z"] = imuBuffer[i].az;
+    sample["gyro"]["x"] = imuBuffer[i].gx;
+    sample["gyro"]["y"] = imuBuffer[i].gy;
+    sample["gyro"]["z"] = imuBuffer[i].gz;
+  }
 
-  // 发送 POST 请求
+  // 打印调试信息
+  String jsonBody;
+  serializeJsonPretty(doc, jsonBody);
+  Serial.println("Sending JSON: " + jsonBody);
+
   int httpResponseCode = http.POST(jsonBody);
-
-  // 打印响应状态码
   if (httpResponseCode > 0) {
     String response = http.getString();
-
-    // 打印服务器响应内容
-    Serial.println("HTTP Response Code: " + String(httpResponseCode));
-    Serial.println("Server Response: " + response);
-
-    // 使用StaticJsonDocument替代DynamicJsonDocument（节省内存）
-    StaticJsonDocument<256> doc;  // 根据实际数据大小调整容量
-    DeserializationError error = deserializeJson(doc, response);
-
+    Serial.println("HTTP Response: " + String(httpResponseCode) + " - " + response);
+    
+    StaticJsonDocument<256> respDoc;
+    DeserializationError error = deserializeJson(respDoc, response);
     if (!error) {
-      String newMsg = doc["msg"].as<String>();
-      String dateStr = doc["date"].as<String>();
-
+      String newMsg = respDoc["msg"].as<String>();
+      String dateStr = respDoc["date"].as<String>();
       if (newMsg != msgBuffer) {
         strcpy(msgBuffer, newMsg.c_str());
         drawMessage(newMsg);
       }
-
+      String newTimekeeper = respDoc["timekeeper"].as<String>();
+      if (newTimekeeper != timekeeperBuffer) {
+        strcpy(timekeeperBuffer, newTimekeeper.c_str());
+      }
       syncTimeFromServer(dateStr);
-    } else {
-      Serial.print("JSON解析失败: ");
-      Serial.println(error.c_str());
     }
   } else {
-    // 打印错误信息
-    Serial.println("POST request failed. Error code: " + String(httpResponseCode));
+    Serial.println("HTTP Error: " + String(httpResponseCode)); 
   }
-
-  // 关闭连接
   http.end();
 }
 
@@ -282,16 +311,10 @@ void syncTimeFromServer(const String &dateStr) {
   struct tm serverTime;
   if (strptime(dateStr.c_str(), "%Y-%m-%dT%H:%M:%S", &serverTime)) {
     time_t serverTimestamp = mktime(&serverTime);
-    time_t localTimestamp = now();
-
-    // 转换为UTC+8时间
-    serverTimestamp += 28800;  // UTC转UTC+8
-
-    if (abs(serverTimestamp - localTimestamp) > 5) {
-      setTime(serverTimestamp);
-      lastSyncTime = serverTimestamp;
-      timeSynced = true;
-      USBSerial.println("Time synced from server");
-    }
+    serverTimestamp += 28800; // UTC转UTC+8
+    setTime(serverTimestamp);
+    lastSyncTime = serverTimestamp;
+    timeSynced = true;
+    USBSerial.println("Time synced from server");
   }
 }

@@ -25,6 +25,10 @@
       "style": { "navigationBarTitleText": "专注记录" }
     },
     {
+      "path": "pages/focus/focusInfo",
+      "style": { "navigationBarTitleText": "专注查看" }
+    },
+    {
       "path": "pages/tool/tool",
       "style": { "navigationBarTitleText": "探索" }
     },
