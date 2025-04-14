@@ -30,7 +30,12 @@
     },
     {
       "path": "pages/tool/tool",
-      "style": { "navigationBarTitleText": "探索" }
+      "style": {
+        "navigationBarTitleText": "探索",
+        "usingComponents": {
+          "echarts-for-uniapp": "/uni_modules/echarts-for-uniapp/components/echarts-for-uniapp"
+        }
+      }
     },
     {
       "path": "pages/tool/tomatoOne",

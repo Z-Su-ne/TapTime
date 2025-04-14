@@ -4,6 +4,7 @@ const Logger = require("../../infrastructure/common/logger");
 const FocusAddUseCase = require("../usecase/focus_case/focus_add");
 const FocusDelUseCase = require("../usecase/focus_case/focus_del");
 const FocusInfoUseCase = require("../usecase/focus_case/focus_info");
+const FocusMapUseCase = require("../usecase/focus_case/focus_map");
 
 const moduleName = "focus_controller.js";
 
@@ -36,6 +37,14 @@ class FocusController {
           const delRes = await FocusDelUseCase.do(logId, data);
           ctx.status = 200;
           ctx.body = delRes;
+          break;
+
+        // 删除目标
+        case "heatmap":
+          Logger.info(logId, moduleName, Logger.status.START, data);
+          const mapRes = await FocusMapUseCase.do(logId, data);
+          ctx.status = 200;
+          ctx.body = mapRes;
           break;
 
         default:

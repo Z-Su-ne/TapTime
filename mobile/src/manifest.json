@@ -6,6 +6,11 @@
   "versionCode": "100",
   "transformPx": false,
   "plus": {
+    "modules": {
+      "echarts": {
+        "npm": "echarts-for-uniapp"
+      }
+    },
     "distribute": {
       "android": {
         "permissions": [

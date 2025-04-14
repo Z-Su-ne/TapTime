@@ -18,14 +18,14 @@
       </view>
 
       <!-- 月记录日历热力图 -->
-      <view class="echartsView">
+      <view class="echartsView" style="height: 20vh; padding: 16px">
         <view id="heatmap" class="echarts"></view>
       </view>
 
       <!-- 今日饼图 -->
-      <view class="echartsView">
+      <!-- <view class="echartsView" style="height: 35vh">
         <view id="pie" class="echarts"></view>
-      </view>
+      </view> -->
     </view>
 
     <!-- 底部导航栏 -->
@@ -55,14 +55,7 @@ import { useIndexStore } from "../../stores/useIndexStore";
 import * as echarts from "echarts/core";
 import { HeatmapChart, PieChart } from "echarts/charts";
 import { CanvasRenderer } from "echarts/renderers";
-import {
-  GridComponent,
-  TooltipComponent,
-  VisualMapComponent,
-  LegendComponent,
-  TitleComponent, // 新增标题组件
-  CalendarComponent, // 新增日历组件
-} from "echarts/components";
+import { GridComponent, TooltipComponent, VisualMapComponent, LegendComponent, TitleComponent, CalendarComponent } from "echarts/components";
 
 export default {
   setup() {
@@ -73,87 +66,112 @@ export default {
     const index = useIndexStore();
 
     // 主题色配置
-    const themeColors = ["#0052d9", "#2151d1", "#f2f3fe"];
+    const themeColors = ["#f2f3fe", "#2151d1", "#0052d9"];
 
     // 初始化图表
-    const initCharts = () => {
+    const initCharts = async () => {
+      const data = await fetchData();
       nextTick(() => {
         // 注册必须的组件
         echarts.use([TitleComponent, CalendarComponent, HeatmapChart, PieChart, CanvasRenderer, TooltipComponent, VisualMapComponent, LegendComponent]);
 
         // 日历热力图
         const heatmapChart = echarts.init(document.getElementById("heatmap"));
-        heatmapChart.setOption(getHeatmapOption());
+        heatmapChart.setOption({
+          ...getHeatmapOption(),
+          series: {
+            ...getHeatmapOption().series,
+            data: data,
+          },
+        });
 
         // 饼图
-        const pieChart = echarts.init(document.getElementById("pie"));
+        const pieChart = echarts.init(document.getElementById("pie"), null, {
+          useDirtyRect: true,
+        });
         pieChart.setOption(getPieOption());
       });
     };
 
-    // 生成虚拟数据
-    const getVirtualData = (year) => {
-      const date = +echarts.time.parse(year + "-01-01");
-      const end = +echarts.time.parse(+year + 1 + "-01-01");
-      const dayTime = 3600 * 24 * 1000;
-      const data = [];
-      for (let time = date; time < end; time += dayTime) {
-        data.push([echarts.time.format(time, "{yyyy}-{MM}-{dd}", false), Math.floor(Math.random() * 100)]);
+    // 获取日历图数据
+    const fetchData = async () => {
+      try {
+        const postUser = ref({
+          event: "heatmap",
+          data: { uuid: user.okrFocus },
+        });
+        const logId = utils.generateUUID();
+        const mapRes = await focus.focusPost(logId, postUser.value);
+        if (mapRes.success) {
+          console.log(mapRes.return);
+          return mapRes.return;
+        } else {
+          Toast({ message: mapRes.return, theme: "error" });
+        }
+      } catch (error) {
+        console.error("数据获取失败:", error);
+        return [];
       }
-      return data;
     };
 
     // 日历图配置
-    const getHeatmapOption = () => ({
-      title: {
-        top: 10,
-        left: "center",
-        text: "学习日历",
-        textStyle: {
-          color: themeColors[0],
+    const getHeatmapOption = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const lastDay = new Date(year, month, 0).getDate();
+
+      return {
+        title: {
+          text: "本月日历热力图",
+          textStyle: { color: themeColors[2] },
+          top: 10,
+          left: "center",
         },
-      },
-      tooltip: {
-        formatter: (params) => `${params.value[0]}<br/>学习时长：${params.value[1]}分钟`,
-      },
-      visualMap: {
-        min: 0,
-        max: 100,
-        type: "piecewise",
-        orient: "horizontal",
-        left: "center",
-        top: 40,
-        inRange: {
-          color: [themeColors[2], themeColors[1], themeColors[0]],
+        visualMap: {
+          min: 0,
+          max: 360,
+          type: "piecewise",
+          orient: "horizontal",
+          left: "center",
+          top: 40,
+          textStyle: { color: "#000000" },
+          inRange: {
+            color: ["#f2f3fe", "#2151d1", "#0052d9"],
+          },
         },
-      },
-      calendar: {
-        top: 80,
-        left: 20,
-        right: 20,
-        cellSize: ["auto", 15],
-        range: new Date().getFullYear(),
-        itemStyle: {
-          borderWidth: 0.5,
-          borderColor: themeColors[2],
+        calendar: {
+          top: 80,
+          left: 20,
+          right: 20,
+          cellSize: ["auto", "auto"],
+          range: [`${year}-${month}-01`, `${year}-${month}-${lastDay}`],
+          itemStyle: { borderColor: themeColors[2] },
+          yearLabel: { show: false },
         },
-        yearLabel: { show: false },
-      },
-      series: {
-        type: "heatmap",
-        coordinateSystem: "calendar",
-        data: getVirtualData(new Date().getFullYear()),
-      },
-    });
+
+        series: {
+          type: "heatmap",
+          coordinateSystem: "calendar",
+          data: [],
+        },
+      };
+    };
 
     // 饼图配置
     const getPieOption = () => ({
+      title: {
+        text: "今日饼图",
+        textStyle: { color: themeColors[2] },
+        top: 10,
+        left: "center",
+      },
       tooltip: {
         trigger: "item",
         formatter: "{a} <br/>{b}: {c}小时 ({d}%)",
       },
       legend: {
-        top: "5%",
+        top: "15%",
         left: "center",
         textStyle: {
           color: themeColors[0],
@@ -181,13 +199,7 @@ export default {
           labelLine: {
             show: false,
           },
-          data: [
-            { value: 3.6, name: "前端开发" },
-            { value: 2.1, name: "算法练习" },
-            { value: 1.8, name: "项目实战" },
-            { value: 1.2, name: "技术阅读" },
-            { value: 0.6, name: "其他" },
-          ],
+          data: [],
         },
       ],
     });
@@ -198,7 +210,9 @@ export default {
     });
 
     // 被 <keep-alive> 缓存，使用 onActivated 钩子在每次激活时执行
-    onActivated(() => {});
+    onActivated(() => {
+      initCharts();
+    });
 
     // 番茄钟跳转
     const toTomato = () => {
@@ -245,6 +259,8 @@ export default {
       tabBar,
       tabBarSelect,
       toTabBar,
+
+      fetchData,
     };
   },
 };
@@ -286,11 +302,9 @@ export default {
 }
 
 .echartsView {
-  width: 100%;
-  height: 400px;
-  padding: 16px;
-  margin-bottom: 16px;
-  /* background: white; */
+  margin: 16px;
+  padding: 8px;
+  background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
